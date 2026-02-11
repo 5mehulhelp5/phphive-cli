@@ -5,6 +5,24 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-02-12
+
+### Changed
+
+- **Minimum PHP Version**: Upgraded from PHP 8.3 to PHP 8.4
+  - Symfony 8 requires PHP 8.4+
+  - CI workflow now tests on PHP 8.4 and 8.5 only
+  - Platform configuration updated to PHP 8.4.0
+- **Symfony 8 Upgrade**: All Symfony components upgraded from ^7.0 to ^8.0
+  - symfony/console ^8.0
+  - symfony/process ^8.0
+  - symfony/finder ^8.0
+
+### Fixed
+
+- CI workflow compatibility with Symfony 8 requirements
+- Composer platform checks now properly aligned with minimum PHP version
+
 ## [1.0.3] - 2026-02-12
 
 ### Changed

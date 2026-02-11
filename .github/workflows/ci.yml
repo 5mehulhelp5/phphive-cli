@@ -81,16 +81,16 @@ jobs:
         # Operating systems to test on
         os: [ubuntu-latest]
 
-        # PHP versions to test (8.3 is minimum, 8.5 is latest)
-        php: ["8.3", "8.4", "8.5"]
+        # PHP versions to test (8.4 is minimum, 8.5 is latest)
+        php: ["8.4", "8.5"]
 
         # Dependency versions to test
         dependencies: [highest]
 
         # Include additional test configurations
         include:
-          # Test with lowest supported dependencies on PHP 8.3
-          - php: "8.3"
+          # Test with lowest supported dependencies on PHP 8.4
+          - php: "8.4"
             os: ubuntu-latest
             dependencies: lowest
 
@@ -194,8 +194,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          # Use PHP 8.3 for quality checks (minimum supported version)
-          php-version: "8.3"
+          # Use PHP 8.4 for quality checks (minimum supported version)
+          php-version: "8.4"
 
           # Required PHP extensions
           extensions: mbstring, json, tokenizer, xml, ctype, iconv
@@ -216,9 +216,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: ${{ runner.os }}-php-8.3-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-8.3-composer-
+            ${{ runner.os }}-php-8.4-composer-
             ${{ runner.os }}-php-
 
       # ----------------------------------------------------------------------
@@ -277,7 +277,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
           extensions: mbstring, json
           coverage: none
           tools: composer:v2
