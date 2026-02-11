@@ -540,13 +540,7 @@ final class Arr extends BaseArr
      */
     public static function any(array $array, callable $callback): bool
     {
-        foreach ($array as $key => $value) {
-            if ($callback($value, $key)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($array, fn ($value, $key) => $callback($value, $key));
     }
 
     /**
@@ -558,13 +552,7 @@ final class Arr extends BaseArr
      */
     public static function all(array $array, callable $callback): bool
     {
-        foreach ($array as $key => $value) {
-            if (! $callback($value, $key)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all($array, fn ($value, $key) => $callback($value, $key));
     }
 
     /**

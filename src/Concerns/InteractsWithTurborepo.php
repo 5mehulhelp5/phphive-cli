@@ -244,6 +244,6 @@ trait InteractsWithTurborepo
             return [];
         }
 
-        return array_values(array_filter(array_keys($tasks), 'is_string'));
+        return array_values(array_filter(array_keys($tasks), is_string(...)));
     }
 }

@@ -708,7 +708,7 @@ All commands support these common options:
   "name": "my-org/monorepo",
   "type": "project",
   "require": {
-    "php": "^8.3",
+    "php": "^8.5",
     "mono-php/cli": "^1.0"
   },
   "scripts": {
