@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\AppTypes;
 
+use function array_key_first;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
@@ -88,6 +89,9 @@ abstract class AbstractAppType implements AppTypeInterface
      * Displays an interactive text input prompt using Laravel Prompts.
      * Supports placeholders, default values, and required validation.
      *
+     * In non-interactive mode (--no-interaction flag), returns the default value
+     * or an empty string if no default is provided.
+     *
      * Example usage:
      * ```php
      * $name = $this->askText(
@@ -106,6 +110,11 @@ abstract class AbstractAppType implements AppTypeInterface
      */
     protected function askText(string $label, string $placeholder = '', ?string $default = null, bool $required = true): string
     {
+        // In non-interactive mode, return default value
+        if ($this->input !== null && !$this->input->isInteractive()) {
+            return $default ?? '';
+        }
+
         return text(
             label: $label,
             placeholder: $placeholder,
@@ -119,6 +128,8 @@ abstract class AbstractAppType implements AppTypeInterface
      *
      * Displays an interactive confirmation prompt using Laravel Prompts.
      * The user can answer with yes/no, y/n, or press enter for the default.
+     *
+     * In non-interactive mode (--no-interaction flag), returns the default value.
      *
      * Example usage:
      * ```php
@@ -134,6 +145,11 @@ abstract class AbstractAppType implements AppTypeInterface
      */
     protected function askConfirm(string $label, bool $default = true): bool
     {
+        // In non-interactive mode, return default value
+        if ($this->input !== null && !$this->input->isInteractive()) {
+            return $default;
+        }
+
         return confirm(
             label: $label,
             default: $default
@@ -145,6 +161,9 @@ abstract class AbstractAppType implements AppTypeInterface
      *
      * Displays an interactive selection menu using Laravel Prompts.
      * The user can navigate options with arrow keys and select with enter.
+     *
+     * In non-interactive mode (--no-interaction flag), returns the default value
+     * or the first option if no default is provided.
      *
      * Example usage:
      * ```php
@@ -166,6 +185,11 @@ abstract class AbstractAppType implements AppTypeInterface
      */
     protected function askSelect(string $label, array $options, ?string $default = null): string
     {
+        // In non-interactive mode, return default or first option
+        if ($this->input !== null && !$this->input->isInteractive()) {
+            return $default ?? (string) array_key_first($options);
+        }
+
         $result = select(
             label: $label,
             options: $options,

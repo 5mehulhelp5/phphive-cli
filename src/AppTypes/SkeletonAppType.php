@@ -107,26 +107,25 @@ class SkeletonAppType extends AbstractAppType
             // Initialize configuration array
             $config = [];
 
-            // Check if running in non-interactive mode
-            $isInteractive = $input->isInteractive();
-
             // =====================================================================
             // BASIC INFORMATION
             // =====================================================================
 
             // Application name - used for directory name, package name, and namespace
-            $config['name'] = $isInteractive ? $this->askText(
+            $config['name'] = $this->askText(
                 label: 'Application name',
                 placeholder: 'my-app',
+                default: 'my-app',
                 required: true
-            ) : 'my-app';
+            );
 
             // Application description - used in composer.json and documentation
-            $config['description'] = $isInteractive ? $this->askText(
+            $config['description'] = $this->askText(
                 label: 'Application description',
                 placeholder: 'A PHP application',
+                default: 'A PHP application',
                 required: false
-            ) : 'A PHP application';
+            );
 
             // =====================================================================
             // PHP VERSION
@@ -135,7 +134,7 @@ class SkeletonAppType extends AbstractAppType
             // Minimum PHP version requirement
             // This determines the "require.php" constraint in composer.json
             // and affects which language features can be used
-            $config['php_version'] = $isInteractive ? $this->askSelect(
+            $config['php_version'] = $this->askSelect(
                 label: 'Minimum PHP version',
                 options: [
                     '8.5' => 'PHP 8.5',
@@ -144,7 +143,7 @@ class SkeletonAppType extends AbstractAppType
                     '8.2' => 'PHP 8.2',
                 ],
                 default: '8.3'
-            ) : '8.3';
+            );
 
             // =====================================================================
             // OPTIONAL FEATURES
@@ -152,17 +151,17 @@ class SkeletonAppType extends AbstractAppType
 
             // PHPUnit - Unit testing framework
             // Includes PHPUnit in require-dev and creates tests/ directory
-            $config['include_tests'] = $isInteractive ? $this->askConfirm(
+            $config['include_tests'] = $this->askConfirm(
                 label: 'Include PHPUnit for testing?',
                 default: true
-            ) : true;
+            );
 
             // Quality tools - Static analysis and code formatting
             // Includes PHPStan (static analysis) and Pint (code formatting)
-            $config['include_quality_tools'] = $isInteractive ? $this->askConfirm(
+            $config['include_quality_tools'] = $this->askConfirm(
                 label: 'Include quality tools (PHPStan, Pint)?',
                 default: true
-            ) : true;
+            );
 
             return $config;
         }
