@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\AppTypes;
+namespace PhpHive\Cli\AppTypes;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -132,11 +132,11 @@ class LaravelAppType extends AbstractAppType
         $config['laravel_version'] = $this->askSelect(
             label: 'Laravel version',
             options: [
-                '12' => 'Laravel 12 (Latest)',
-                '11' => 'Laravel 11 (LTS)',
-                '10' => 'Laravel 10',
+                'Laravel 12 (Latest)' => '12',
+                'Laravel 11 (LTS)' => '11',
+                'Laravel 10' => '10',
             ],
-            default: '12'
+            default: 'Laravel 12 (Latest)'
         );
 
         // =====================================================================
@@ -197,6 +197,13 @@ class LaravelAppType extends AbstractAppType
         $config['install_sanctum'] = $this->askConfirm(
             label: 'Install Laravel Sanctum (API authentication)?',
             default: true
+        );
+
+        // Laravel Octane - High-performance application server
+        // Supercharges application performance using Swoole or RoadRunner
+        $config['install_octane'] = $this->askConfirm(
+            label: 'Install Laravel Octane (High-performance server)?',
+            default: false
         );
 
         return $config;
@@ -288,23 +295,30 @@ class LaravelAppType extends AbstractAppType
 
         // Install Laravel Horizon if requested
         // Horizon provides a dashboard for monitoring Redis queues
-        if ($config['install_horizon'] ?? false) {
+        if (($config['install_horizon'] ?? false) === true) {
             $commands[] = 'composer require laravel/horizon';
             $commands[] = 'php artisan horizon:install';
         }
 
         // Install Laravel Telescope if requested
         // Telescope provides debugging and insight into application behavior
-        if ($config['install_telescope'] ?? false) {
+        if (($config['install_telescope'] ?? false) === true) {
             $commands[] = 'composer require laravel/telescope --dev';
             $commands[] = 'php artisan telescope:install';
         }
 
         // Install Laravel Sanctum if requested
         // Sanctum provides API token authentication
-        if ($config['install_sanctum'] ?? false) {
+        if (($config['install_sanctum'] ?? false) === true) {
             // Publish Sanctum configuration and migrations
             $commands[] = 'php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"';
+        }
+
+        // Install Laravel Octane if requested
+        // Octane provides high-performance application server with Swoole/RoadRunner
+        if (($config['install_octane'] ?? false) === true) {
+            $commands[] = 'composer require laravel/octane';
+            $commands[] = 'php artisan octane:install --server=swoole';
         }
 
         // =====================================================================
@@ -377,13 +391,14 @@ class LaravelAppType extends AbstractAppType
         // Get common variables from parent class
         $common = $this->getCommonStubVariables($config);
 
-        // Merge with Laravel-specific variables
-        return array_merge($common, [
+        // Merge with Laravel-specific variables using spread operator
+        return [
+            ...$common,
             // Database driver for .env and config/database.php
             '{{DATABASE_DRIVER}}' => $config['database'] ?? 'mysql',
 
             // Laravel version for composer.json constraints
             '{{LARAVEL_VERSION}}' => $config['laravel_version'] ?? '12',
-        ]);
+        ];
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Concerns;
+namespace PhpHive\Cli\Concerns;
 
 use function array_keys;
 use function file_exists;

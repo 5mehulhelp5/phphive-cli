@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Unit\Commands;
+namespace PhpHive\Cli\Tests\Unit\Commands;
 
-use MonoPhp\Cli\Support\Container;
-use MonoPhp\Cli\Tests\Fixtures\TestCommand;
-use MonoPhp\Cli\Tests\TestCase;
+use PhpHive\Cli\Support\Container;
+use PhpHive\Cli\Tests\Fixtures\TestCommand;
+use PhpHive\Cli\Tests\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 

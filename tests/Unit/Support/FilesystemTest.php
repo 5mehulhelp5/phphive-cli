@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Unit\Support;
+namespace PhpHive\Cli\Tests\Unit\Support;
 
 use function file_get_contents;
 use function file_put_contents;
 use function is_dir;
 use function mkdir;
 
-use MonoPhp\Cli\Support\Filesystem;
-use MonoPhp\Cli\Tests\TestCase;
+use PhpHive\Cli\Support\Filesystem;
+use PhpHive\Cli\Tests\TestCase;
 use RuntimeException;
 
 use function sys_get_temp_dir;

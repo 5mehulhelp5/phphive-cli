@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MonoPhp\{{APP_NAMESPACE}}\Tests\Unit;
+
+use MonoPhp\{{APP_NAMESPACE}}\Example;
+use PHPUnit\Framework\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_greet_returns_greeting(): void
+    {
+        $example = new Example();
+        $result = $example->greet('World');
+
+        $this->assertSame('Hello, World!', $result);
+    }
+}

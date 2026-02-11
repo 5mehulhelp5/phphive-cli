@@ -1,0 +1,19 @@
+# {{APP_NAME}}
+
+{{DESCRIPTION}}
+
+## Installation
+
+```bash
+composer install
+```
+
+## Testing
+
+```bash
+composer test
+```
+
+## License
+
+MIT

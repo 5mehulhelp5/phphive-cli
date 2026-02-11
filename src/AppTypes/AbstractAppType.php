@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\AppTypes;
+namespace PhpHive\Cli\AppTypes;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
-use MonoPhp\Cli\Contracts\AppTypeInterface;
+use PhpHive\Cli\Contracts\AppTypeInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -161,16 +161,18 @@ abstract class AbstractAppType implements AppTypeInterface
      *
      * @param  string                $label   The question label to display
      * @param  array<string, string> $options Associative array of value => label pairs
-     * @param  mixed                 $default Default selected value (must be a key in $options)
+     * @param  string|null           $default Default selected value (must be a key in $options)
      * @return string                The selected option's key
      */
-    protected function askSelect(string $label, array $options, mixed $default = null): string
+    protected function askSelect(string $label, array $options, ?string $default = null): string
     {
-        return select(
+        $result = select(
             label: $label,
             options: $options,
             default: $default
         );
+
+        return (string) $result;
     }
 
     /**
@@ -243,7 +245,7 @@ abstract class AbstractAppType implements AppTypeInterface
      * - {{APP_NAME}}: Original application name as entered by user
      * - {{APP_NAME_NORMALIZED}}: Normalized name for directories/packages
      * - {{APP_NAMESPACE}}: PascalCase namespace component
-     * - {{PACKAGE_NAME}}: Full Composer package name (mono-php/app-name)
+     * - {{PACKAGE_NAME}}: Full Composer package name (phphive/app-name)
      * - {{DESCRIPTION}}: Application description or default
      *
      * Example usage in stub files:
@@ -253,7 +255,7 @@ abstract class AbstractAppType implements AppTypeInterface
      *   "description": "{{DESCRIPTION}}",
      *   "autoload": {
      *     "psr-4": {
-     *       "MonoPhp\\{{APP_NAMESPACE}}\\": "src/"
+     *       "PhpHive\\{{APP_NAMESPACE}}\\": "src/"
      *     }
      *   }
      * }
@@ -284,8 +286,8 @@ abstract class AbstractAppType implements AppTypeInterface
             // PascalCase namespace component for PHP classes
             '{{APP_NAMESPACE}}' => $this->nameToNamespace($appName),
 
-            // Full Composer package name following mono-php/* convention
-            '{{PACKAGE_NAME}}' => "mono-php/{$normalizedName}",
+            // Full Composer package name following phphive/* convention
+            '{{PACKAGE_NAME}}' => "phphive/{$normalizedName}",
 
             // Application description from config or generated default
             '{{DESCRIPTION}}' => $config['description'] ?? "Application: {$appName}",

@@ -802,7 +802,7 @@ $app->run();
 All commands extend `BaseCommand` which provides:
 
 ```php
-namespace MonoPhp\Cli\Commands;
+namespace MonoPhp\Cli\Console\Commands;
 
 use Symfony\Component\Console\Command\Command;
 

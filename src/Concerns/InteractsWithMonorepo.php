@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Concerns;
+namespace PhpHive\Cli\Concerns;
 
 use function array_filter;
 use function dirname;

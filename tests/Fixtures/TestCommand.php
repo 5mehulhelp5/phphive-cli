@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Fixtures;
+namespace PhpHive\Cli\Tests\Fixtures;
 
-use MonoPhp\Cli\Commands\BaseCommand;
-use MonoPhp\Cli\Support\Container;
+use PhpHive\Cli\Console\Commands\BaseCommand;
+use PhpHive\Cli\Support\Container;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 

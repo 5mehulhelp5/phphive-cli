@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Unit\Support;
+namespace PhpHive\Cli\Tests\Unit\Support;
 
-use MonoPhp\Cli\Support\Container;
-use MonoPhp\Cli\Tests\TestCase;
+use PhpHive\Cli\Support\Container;
+use PhpHive\Cli\Tests\TestCase;
 use stdClass;
 
 /**

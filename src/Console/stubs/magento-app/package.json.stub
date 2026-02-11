@@ -1,0 +1,18 @@
+{
+    "name": "@mono-php/{{APP_NAME_NORMALIZED}}",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "composer:install": "composer install --no-interaction --prefer-dist --optimize-autoloader",
+        "dev": "php bin/magento deploy:mode:set developer && php bin/magento cache:disable",
+        "build": "php bin/magento setup:di:compile && php bin/magento setup:static-content:deploy",
+        "test": "php bin/magento dev:tests:run unit",
+        "lint": "vendor/bin/pint --test",
+        "format": "vendor/bin/pint",
+        "typecheck": "vendor/bin/phpstan analyse",
+        "clean": "php bin/magento cache:flush && rm -rf var/cache var/page_cache var/view_preprocessed pub/static/frontend pub/static/adminhtml",
+        "deploy": "php bin/magento deploy:mode:set production && php bin/magento setup:upgrade && php bin/magento setup:di:compile && php bin/magento setup:static-content:deploy && php bin/magento indexer:reindex && php bin/magento cache:flush",
+        "reindex": "php bin/magento indexer:reindex",
+        "upgrade": "php bin/magento setup:upgrade"
+    }
+}

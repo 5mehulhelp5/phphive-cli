@@ -1,0 +1,13 @@
+/vendor/
+/node_modules/
+/.idea/
+/.vscode/
+/var/
+/pub/media/
+/pub/static/
+!/pub/static/.htaccess
+/generated/
+/app/etc/env.php
+/app/etc/config.php
+/.phpunit.cache/
+/.phpstan.cache/

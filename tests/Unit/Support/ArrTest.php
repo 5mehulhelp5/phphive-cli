@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Unit\Support;
+namespace PhpHive\Cli\Tests\Unit\Support;
 
 use function array_values;
 
-use MonoPhp\Cli\Support\Arr;
-use MonoPhp\Cli\Tests\TestCase;
+use PhpHive\Cli\Support\Arr;
+use PhpHive\Cli\Tests\TestCase;
 
 /**
  * Array Helper Test.

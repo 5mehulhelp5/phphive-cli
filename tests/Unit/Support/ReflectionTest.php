@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Unit\Support;
+namespace PhpHive\Cli\Tests\Unit\Support;
 
-use MonoPhp\Cli\Support\Reflection;
-use MonoPhp\Cli\Tests\TestCase;
+use PhpHive\Cli\Support\Reflection;
+use PhpHive\Cli\Tests\TestCase;
 
 /**
  * Reflection Test.

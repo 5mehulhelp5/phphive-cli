@@ -1,0 +1,13 @@
+{
+    "name": "@mono-php/{{APP_NAME_NORMALIZED}}",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "composer:install": "composer install --no-interaction --prefer-dist --optimize-autoloader",
+        "test": "composer test",
+        "lint": "composer lint",
+        "format": "composer format",
+        "typecheck": "composer typecheck",
+        "clean": "rm -rf .phpunit.cache .phpstan.cache"
+    }
+}

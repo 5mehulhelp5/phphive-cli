@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Support;
+namespace PhpHive\Cli\Support;
 
 use function basename;
 use function class_exists;

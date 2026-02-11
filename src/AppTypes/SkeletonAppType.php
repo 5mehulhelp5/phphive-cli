@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\AppTypes;
+namespace PhpHive\Cli\AppTypes;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -217,7 +217,7 @@ class SkeletonAppType extends AbstractAppType
         // Run PHPUnit tests if testing is enabled
         // This verifies that the application structure is correct and
         // that all dependencies are properly installed
-        if ($config['include_tests'] ?? true) {
+        if (($config['include_tests'] ?? true) === true) {
             $commands[] = 'composer test';
         }
 
@@ -275,7 +275,7 @@ class SkeletonAppType extends AbstractAppType
      *   },
      *   "autoload": {
      *     "psr-4": {
-     *       "MonoPhp\\{{APP_NAMESPACE}}\\": "src/"
+     *       "PhpHive\\{{APP_NAMESPACE}}\\": "src/"
      *     }
      *   }
      * }
@@ -289,10 +289,11 @@ class SkeletonAppType extends AbstractAppType
         // Get common variables from parent class
         $common = $this->getCommonStubVariables($config);
 
-        // Merge with skeleton-specific variables
-        return array_merge($common, [
+        // Merge with skeleton-specific variables using spread operator
+        return [
+            ...$common,
             // PHP version for composer.json "require.php" constraint
             '{{PHP_VERSION}}' => $config['php_version'] ?? '8.3',
-        ]);
+        ];
     }
 }

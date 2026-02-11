@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\AppTypes;
+namespace PhpHive\Cli\AppTypes;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -264,13 +264,13 @@ class SymfonyAppType extends AbstractAppType
 
         // Install Symfony Maker Bundle if requested
         // Maker provides code generation commands (make:controller, make:entity, etc.)
-        if ($config['install_maker'] ?? true) {
+        if (($config['install_maker'] ?? true) === true) {
             $commands[] = 'composer require --dev symfony/maker-bundle';
         }
 
         // Install Symfony Security Bundle if requested
         // Security provides authentication, authorization, and user management
-        if ($config['install_security'] ?? true) {
+        if (($config['install_security'] ?? true) === true) {
             $commands[] = 'composer require symfony/security-bundle';
         }
 
@@ -351,13 +351,14 @@ class SymfonyAppType extends AbstractAppType
         // Get common variables from parent class
         $common = $this->getCommonStubVariables($config);
 
-        // Merge with Symfony-specific variables
-        return array_merge($common, [
+        // Merge with Symfony-specific variables using spread operator
+        return [
+            ...$common,
             // Database driver for .env and config/packages/doctrine.yaml
             '{{DATABASE_DRIVER}}' => $config['database'] ?? 'mysql',
 
             // Symfony version for composer.json constraints
             '{{SYMFONY_VERSION}}' => $config['symfony_version'] ?? '7.2',
-        ]);
+        ];
     }
 }

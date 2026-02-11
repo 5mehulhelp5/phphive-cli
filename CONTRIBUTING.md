@@ -224,9 +224,9 @@ cli/
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Commands\Category;
+namespace MonoPhp\Cli\Console\Commands\Category;
 
-use MonoPhp\Cli\Commands\BaseCommand;
+use MonoPhp\Cli\Console\Commands\BaseCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -235,7 +235,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * Detailed explanation of the command's purpose and behavior.
  *
- * @package MonoPhp\Cli\Commands\Category
+ * @package MonoPhp\Cli\Console\Commands\Category
  */
 class YourCommand extends BaseCommand
 {

@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli;
+namespace PhpHive\Cli;
 
 use function in_array;
 use function Laravel\Prompts\clear;
+use function Laravel\Prompts\select;
 
-use MonoPhp\Cli\Concerns\HasDiscovery;
-use MonoPhp\Cli\Support\Container;
-use MonoPhp\Cli\Support\Reflection;
 use Override;
 
 use const PHP_SAPI;
+
+use PhpHive\Cli\Concerns\HasDiscovery;
+use PhpHive\Cli\Support\Container;
+use PhpHive\Cli\Support\Reflection;
 
 use function sprintf;
 
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -53,7 +56,7 @@ final class Application extends BaseApplication
     /**
      * Application name displayed in banner and version output.
      */
-    private const string APP_NAME = 'Mono CLI';
+    private const string APP_NAME = 'PhpHive CLI';
 
     /**
      * Current application version.
@@ -143,8 +146,8 @@ final class Application extends BaseApplication
 
         // Auto-discover and register all commands in the Commands directory
         $this->discoverCommands(
-            __DIR__ . '/Commands',
-            'MonoPhp\\Cli\\Commands',
+            __DIR__ . '/Console/Commands',
+            'PhpHive\\Cli\\Console\\Commands',
         );
 
         // Mark as booted to prevent duplicate registration
@@ -210,6 +213,48 @@ final class Application extends BaseApplication
     }
 
     /**
+     * Find a command by name or alias.
+     *
+     * This method overrides Symfony Console's find() to provide better error
+     * messages with command suggestions when a command is not found.
+     *
+     * Uses Laravel Prompts for interactive command selection when alternatives
+     * are available, providing a better user experience than plain text suggestions.
+     *
+     * @param  string  $name The command name or alias
+     * @return Command The found command
+     *
+     * @throws CommandNotFoundException When command is not found
+     */
+    #[Override]
+    public function find(string $name): Command
+    {
+        try {
+            return parent::find($name);
+        } catch (CommandNotFoundException $commandNotFoundException) {
+            // Get alternatives for better error message
+            $alternatives = $this->findAlternatives($name);
+
+            if ($alternatives !== []) {
+                // Use Laravel Prompts for interactive selection
+                $this->displayBanner();
+
+                $selected = select(
+                    label: "Command \"{$name}\" is not defined. Did you mean one of these?",
+                    options: array_combine($alternatives, $alternatives),
+                    default: $alternatives[0] ?? null,
+                );
+
+                // Find and return the selected command
+                return parent::find((string) $selected);
+            }
+
+            // No alternatives found, throw original exception
+            throw $commandNotFoundException;
+        }
+    }
+
+    /**
      * Register a command with the application.
      *
      * This method instantiates a command class and registers it with the
@@ -234,6 +279,63 @@ final class Application extends BaseApplication
 
         // Register command with Symfony Console
         $this->addCommand($command);
+    }
+
+    /**
+     * Find command alternatives based on user input.
+     *
+     * This method enhances Symfony Console's default command suggestion by:
+     * - Checking command aliases for better matches
+     * - Using Levenshtein distance for fuzzy matching
+     * - Suggesting commands from the same namespace
+     * - Limiting suggestions to the most relevant matches
+     *
+     * When a user types an invalid command, this method finds similar commands
+     * and suggests them, improving the user experience.
+     *
+     * @param  string        $name The invalid command name entered by user
+     * @return array<string> Array of suggested command names
+     */
+    private function findAlternatives(string $name): array
+    {
+        // Get all registered commands
+        $allCommands = array_keys($this->all());
+
+        // Calculate Levenshtein distance for each command
+        $alternatives = [];
+        foreach ($allCommands as $allCommand) {
+            // Ensure command name is a string
+            if (! is_string($allCommand)) {
+                continue;
+            }
+
+            // Skip help and list commands
+            if (in_array($allCommand, ['help', 'list', 'completion'], true)) {
+                continue;
+            }
+
+            // Calculate similarity using Levenshtein distance
+            // Lower distance = more similar
+            $distance = levenshtein($name, $allCommand);
+
+            // Also check aliases
+            $command = $this->get($allCommand);
+            foreach ($command->getAliases() as $alias) {
+                $aliasDistance = levenshtein($name, $alias);
+                $distance = min($distance, $aliasDistance);
+            }
+
+            // Only suggest if distance is reasonable (less than half the command length)
+            if ($distance <= strlen($name) / 2) {
+                $alternatives[$allCommand] = $distance;
+            }
+        }
+
+        // Sort by distance (closest matches first)
+        asort($alternatives);
+
+        // Return top 3 suggestions as array values
+        return array_values(array_slice(array_keys($alternatives), 0, 3));
     }
 
     /**
@@ -271,14 +373,14 @@ final class Application extends BaseApplication
         // ASCII art banner with ANSI color codes
         // \e[36m = cyan, \e[33m = yellow, \e[90m = gray, \e[0m = reset
         $banner = "\e[36m" . PHP_EOL
-            . '███╗   ███╗ ██████╗ ███╗   ██╗ ██████╗' . PHP_EOL
-            . '████╗ ████║██╔═══██╗████╗  ██║██╔═══██╗' . PHP_EOL
-            . '██╔████╔██║██║   ██║██╔██╗ ██║██║   ██║' . PHP_EOL
-            . '██║╚██╔╝██║██║   ██║██║╚██╗██║██║   ██║' . PHP_EOL
-            . '██║ ╚═╝ ██║╚██████╔╝██║ ╚████║╚██████╔╝' . PHP_EOL
-            . '╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝' . PHP_EOL
+            . '██████╗ ██╗  ██╗██████╗ ██╗  ██╗██╗██╗   ██╗███████╗' . PHP_EOL
+            . '██╔══██╗██║  ██║██╔══██╗██║  ██║██║██║   ██║██╔════╝' . PHP_EOL
+            . '██████╔╝███████║██████╔╝███████║██║██║   ██║█████╗  ' . PHP_EOL
+            . '██╔═══╝ ██╔══██║██╔═══╝ ██╔══██║██║╚██╗ ██╔╝██╔══╝  ' . PHP_EOL
+            . '██║     ██║  ██║██║     ██║  ██║██║ ╚████╔╝ ███████╗' . PHP_EOL
+            . '╚═╝     ╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝  ╚══════╝' . PHP_EOL
             . "\e[0m" . PHP_EOL
-            . "\e[33mPHP Turborepo Monorepo Management\e[0m \e[90mv" . self::APP_VERSION . "\e[0m" . PHP_EOL
+            . "\e[33mPHP Monorepo Management powered by Turborepo\e[0m \e[90mv" . self::APP_VERSION . "\e[0m" . PHP_EOL
             . PHP_EOL;
 
         echo $banner;

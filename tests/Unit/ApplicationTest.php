@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests\Unit;
+namespace PhpHive\Cli\Tests\Unit;
 
-use MonoPhp\Cli\Application;
-use MonoPhp\Cli\Support\Container;
-use MonoPhp\Cli\Tests\TestCase;
+use PhpHive\Cli\Application;
+use PhpHive\Cli\Support\Container;
+use PhpHive\Cli\Tests\TestCase;
 
 /**
  * Application Test.
@@ -113,7 +113,7 @@ final class ApplicationTest extends TestCase
         $version = $app->getLongVersion();
 
         // Assert it contains expected information
-        $this->assertStringContainsString('Mono CLI', $version);
+        $this->assertStringContainsString('PhpHive CLI', $version);
         $this->assertStringContainsString('version', $version);
     }
 }

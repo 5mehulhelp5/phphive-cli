@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Concerns;
+namespace PhpHive\Cli\Concerns;
 
 use function error_log;
 use function is_dir;
 use function is_subclass_of;
 
-use MonoPhp\Cli\Support\Reflection;
+use PhpHive\Cli\Support\Reflection;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -48,7 +48,7 @@ use Throwable;
  *     {
  *         $this->discoverCommands(
  *             __DIR__ . '/Commands',
- *             'MonoPhp\\Cli\\Commands'
+ *             'PhpHive\\Cli\\Console\\Commands'
  *         );
  *     }
  * }
@@ -104,7 +104,7 @@ trait HasDiscovery
 
             // Build fully qualified class name from file path
             // Example: /path/to/Command/Install/InstallCommand.php
-            //       -> \MonoPhp\Cli\Command\Install\InstallCommand
+            //       -> \PhpHive\Cli\Command\Install\InstallCommand
             $relativePath = str_replace($path, '', (string) $file->getPathname());
             $relativePath = str_replace(['/', '.php'], ['\\', ''], $relativePath);
             $className = "{$namespace}{$relativePath}";

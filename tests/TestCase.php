@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MonoPhp\Cli\Tests;
+namespace PhpHive\Cli\Tests;
 
 use PHPUnit\Framework\TestCase as BaseTestCase;
 

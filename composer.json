@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "mono-php/cli",
+    "name": "phphive/cli",
     "description": "A powerful, production-ready CLI tool for managing PHP monorepos with Turborepo integration",
     "type": "library",
     "keywords": [
@@ -13,18 +13,18 @@
         "build-tool",
         "developer-tools"
     ],
-    "homepage": "https://github.com/mono-php/cli",
+    "homepage": "https://github.com/phphive/cli",
     "license": "MIT",
     "authors": [
         {
-            "name": "Mono PHP Team",
-            "email": "team@mono-php.dev"
+            "name": "PhpHive Team",
+            "email": "team@phphive.dev"
         }
     ],
     "support": {
-        "issues": "https://github.com/mono-php/cli/issues",
-        "source": "https://github.com/mono-php/cli",
-        "docs": "https://github.com/mono-php/cli#readme"
+        "issues": "https://github.com/phphive/cli/issues",
+        "source": "https://github.com/phphive/cli",
+        "docs": "https://github.com/phphive/cli#readme"
     },
     "require": {
         "php": "^8.3",
@@ -47,17 +47,17 @@
     },
     "autoload": {
         "psr-4": {
-            "MonoPhp\\Cli\\": "src/"
+            "PhpHive\\Cli\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MonoPhp\\Cli\\Tests\\": "tests/",
-            "MonoPhp\\Cli\\Tests\\Fixtures\\": "tests/Fixtures/"
+            "PhpHive\\Cli\\Tests\\": "tests/",
+            "PhpHive\\Cli\\Tests\\Fixtures\\": "tests/Fixtures/"
         }
     },
     "bin": [
-        "bin/mono"
+        "bin/hive"
     ],
     "config": {
         "sort-packages": true,
