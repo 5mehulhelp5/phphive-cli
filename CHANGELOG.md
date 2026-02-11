@@ -5,6 +5,23 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-02-12
+
+### Changed
+
+- **Template-Based Workspace Creation**: `make:workspace` now clones from official template repository
+  - Clones from https://github.com/pixielity-co/hive-template
+  - Includes pre-configured sample app and package
+  - Complete monorepo structure with all configuration files
+  - Automatic package name updates in package.json and composer.json
+  - Fresh git repository initialization
+- **Simplified Command Options**: Removed `--type` and `--no-git` options (no longer needed with template)
+
+### Fixed
+
+- PHPStan level 8 compliance issues in AbstractAppType and Arr.php
+- Redundant instanceof checks removed for cleaner code
+
 ## [1.0.2] - 2026-02-11
 
 ### Fixed
