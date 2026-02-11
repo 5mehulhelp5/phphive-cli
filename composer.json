@@ -43,7 +43,7 @@
         "rector/rector": "^2.0",
         "phpunit/phpunit": "^11.5",
         "mockery/mockery": "^1.6",
-        "infection/infection": "^0.29"
+        "infection/infection": "^0.32"
     },
     "autoload": {
         "psr-4": {
