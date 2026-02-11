@@ -1,0 +1,103 @@
+# PHPStan Configuration - Pixielity Framework
+# ============================================
+#
+# Production-ready static analysis configuration for the Pixielity Framework monorepo.
+#
+# Usage:
+#   composer analyse                    # Run analysis
+#   composer analyse:baseline           # Generate baseline
+#   vendor/bin/phpstan analyse          # Direct execution
+#
+# @version 1.0.0
+
+# Temporarily disable Larastan until Laravel is installed
+# includes:
+#     - vendor/larastan/larastan/extension.neon
+
+parameters:
+    # =========================================================================
+    # ANALYSIS PATHS
+    # =========================================================================
+    # Analyze all source code in src/** and bin
+    paths:
+        - src
+        - bin
+
+    # =========================================================================
+    # STRICTNESS LEVEL (0-9, 9 is strictest)
+    # =========================================================================
+    level: 8
+
+    # =========================================================================
+    # BUILD DIRECTORY
+    # =========================================================================
+    tmpDir: build/phpstan
+
+    # =========================================================================
+    # TYPE CHECKING CONFIGURATION
+    # =========================================================================
+    checkUnionTypes: true
+    treatPhpDocTypesAsCertain: true
+    checkExplicitMixedMissingReturn: true
+    checkFunctionNameCase: true
+    checkInternalClassCaseSensitivity: true
+    checkMissingOverrideMethodAttribute: false
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkBenevolentUnionTypes: true
+
+    # =========================================================================
+    # IGNORED ERROR PATTERNS
+    # =========================================================================
+    ignoreErrors:
+        # PHPUnit test framework
+        - '#PHPUnit\\#'
+
+        # Mockery mocking framework
+        - '#Mockery\\#'
+
+        # PSR interfaces (external dependencies)
+        - '#Psr\\(Container|Http)\\#'
+
+        # Unsafe new static() in factory methods (intentional pattern)
+        - '#Unsafe usage of new static\(\)#'
+
+        # PHPDoc type assertions
+        - '#Call to function is_string\(\) with string will always evaluate to true#'
+        - '#Call to function is_array\(\) with array.* will always evaluate to true#'
+        - '#Strict comparison using !== between .* and (false|null) will always evaluate to true#'
+
+        # Missing iterable value types (too verbose)
+        - '#has no value type specified in iterable type array#'
+        - '#with no value type specified in iterable type array#'
+
+        # Missing generic types
+        - '#does not specify its types: TKey, TValue#'
+        - '#but does not specify its types#'
+
+    # =========================================================================
+    # EXCLUDED PATHS
+    # =========================================================================
+    # Exclude third-party code, tests, and generated files
+    excludePaths:
+        - */vendor/*
+        - */tests/*
+        - */stubs/*
+        - */cache/*
+        - */storage/*
+        - */Fixtures/*
+        - */fixtures/*
+
+    # =========================================================================
+    # REPORTING CONFIGURATION
+    # =========================================================================
+    reportUnmatchedIgnoredErrors: false
+    reportStaticMethodSignatures: true
+    reportAlwaysTrueInLastCondition: true
+
+    # =========================================================================
+    # PERFORMANCE OPTIMIZATION
+    # =========================================================================
+    parallel:
+        jobSize: 20
+        maximumNumberOfProcesses: 4
+        minimumNumberOfJobsPerProcess: 2
