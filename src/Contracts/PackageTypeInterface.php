@@ -19,6 +19,95 @@ namespace PhpHive\Cli\Contracts;
  */
 interface PackageTypeInterface
 {
+    // =========================================================================
+    // STUB VARIABLE CONSTANTS
+    // =========================================================================
+
+    /**
+     * Package name stub variable.
+     *
+     * Placeholder for the original package name in stub templates.
+     * Example: 'test-laravel'
+     */
+    public const VAR_PACKAGE_NAME = '{{PACKAGE_NAME}}';
+
+    /**
+     * Package namespace stub variable.
+     *
+     * Placeholder for the PascalCase namespace component in stub templates.
+     * Example: 'TestLaravel'
+     */
+    public const VAR_PACKAGE_NAMESPACE = '{{PACKAGE_NAMESPACE}}';
+
+    /**
+     * Composer package name stub variable.
+     *
+     * Placeholder for the full Composer package name in stub templates.
+     * Example: 'phphive/test-laravel'
+     */
+    public const VAR_COMPOSER_PACKAGE_NAME = '{{COMPOSER_PACKAGE_NAME}}';
+
+    /**
+     * Description stub variable.
+     *
+     * Placeholder for the package description in stub templates.
+     */
+    public const VAR_DESCRIPTION = '{{DESCRIPTION}}';
+
+    /**
+     * Author name stub variable.
+     *
+     * Placeholder for the package author name in stub templates.
+     */
+    public const VAR_AUTHOR_NAME = '{{AUTHOR_NAME}}';
+
+    /**
+     * Author email stub variable.
+     *
+     * Placeholder for the package author email in stub templates.
+     */
+    public const VAR_AUTHOR_EMAIL = '{{AUTHOR_EMAIL}}';
+
+    /**
+     * Full namespace stub variable.
+     *
+     * Placeholder for the full PHP namespace in stub templates.
+     * Example: 'PhpHive\TestLaravel'
+     */
+    public const VAR_NAMESPACE = '{{NAMESPACE}}';
+
+    // =========================================================================
+    // PACKAGE TYPE IDENTIFIERS
+    // =========================================================================
+
+    /**
+     * Laravel package type identifier.
+     *
+     * Used for Laravel packages with Service Provider and Module support.
+     */
+    public const TYPE_LARAVEL = 'laravel';
+
+    /**
+     * Symfony package type identifier.
+     *
+     * Used for Symfony bundles with Bundle class and DependencyInjection.
+     */
+    public const TYPE_SYMFONY = 'symfony';
+
+    /**
+     * Magento package type identifier.
+     *
+     * Used for Magento modules with module.xml and registration.php.
+     */
+    public const TYPE_MAGENTO = 'magento';
+
+    /**
+     * Skeleton package type identifier.
+     *
+     * Used for generic PHP libraries without framework-specific features.
+     */
+    public const TYPE_SKELETON = 'skeleton';
+
     /**
      * Get the package type identifier.
      *
