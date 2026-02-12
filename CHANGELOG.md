@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Allows installation alongside other global packages (Laravel Installer, Sail, etc.)
   - Fixes "could not be resolved to an installable set of packages" error
   - Maintains compatibility with both Symfony 7 and 8
+- **Release Workflow**: Fixed semantic version comparison using `sort -V` instead of string comparison
+  - Fixes issue where version 1.0.10 was incorrectly considered older than 1.0.9
 
 ## [1.0.9] - 2026-02-12
 
