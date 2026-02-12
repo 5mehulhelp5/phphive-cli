@@ -314,6 +314,14 @@ final class CreatePackageCommand extends BaseCommand
     private function getValidatedPackageName(InputInterface $input): string
     {
         $name = $input->getArgument('name');
+
+        // Validate the name format first
+        $validation = $this->validatePackageName($name);
+        if ($validation !== null) {
+            $this->error($validation);
+            exit(Command::FAILURE);
+        }
+
         $root = $this->getMonorepoRoot();
         $packagePath = "{$root}/packages/{$name}";
 
@@ -332,7 +340,7 @@ final class CreatePackageCommand extends BaseCommand
         $suggestions = $suggestionService->suggest(
             $name,
             'package',
-            fn ($suggestedName) => ! is_dir("{$root}/packages/{$suggestedName}")
+            fn ($suggestedName) => $this->validatePackageName($suggestedName) === null && ! is_dir("{$root}/packages/{$suggestedName}")
         );
 
         if (count($suggestions) === 0) {
@@ -363,7 +371,14 @@ final class CreatePackageCommand extends BaseCommand
             required: true
         );
 
-        // Validate the chosen name
+        // Validate the chosen name format
+        $validation = $this->validatePackageName($choice);
+        if ($validation !== null) {
+            $this->error($validation);
+            exit(Command::FAILURE);
+        }
+
+        // Validate the chosen name availability
         $chosenPath = "{$root}/packages/{$choice}";
         if (is_dir($chosenPath)) {
             $this->error("Package '{$choice}' also exists. Please try again with a different name.");
@@ -373,6 +388,36 @@ final class CreatePackageCommand extends BaseCommand
         $this->info("✓ Package name '{$choice}' is available");
 
         return $choice;
+    }
+
+    /**
+     * Validate package name.
+     *
+     * Ensures the package name follows conventions:
+     * - Not empty
+     * - Contains only lowercase letters and hyphens
+     * - Starts with a letter
+     * - No consecutive hyphens
+     * - No numbers (since we generate PHP namespaces from names)
+     *
+     * @param  string|null $name The package name to validate
+     * @return string|null Error message if invalid, null if valid
+     */
+    private function validatePackageName(?string $name): ?string
+    {
+        if ($name === null || trim($name) === '') {
+            return 'Package name cannot be empty';
+        }
+
+        if (preg_match('/^[a-z][a-z-]*$/', $name) !== 1) {
+            return 'Package name must start with a letter and contain only lowercase letters and hyphens (no numbers)';
+        }
+
+        if (str_contains($name, '--')) {
+            return 'Package name cannot contain consecutive hyphens';
+        }
+
+        return null;
     }
 
     /**

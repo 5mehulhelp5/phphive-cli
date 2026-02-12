@@ -483,6 +483,14 @@ final class CreateAppCommand extends BaseCommand
     private function getValidatedAppName(InputInterface $input): string
     {
         $name = $input->getArgument('name');
+
+        // Validate the name format first
+        $validation = $this->validateAppName($name);
+        if ($validation !== null) {
+            $this->error($validation);
+            exit(Command::FAILURE);
+        }
+
         $root = $this->getMonorepoRoot();
         $appPath = "{$root}/apps/{$name}";
 
@@ -501,7 +509,7 @@ final class CreateAppCommand extends BaseCommand
         $suggestions = $suggestionService->suggest(
             $name,
             'app',
-            fn ($suggestedName) => ! is_dir("{$root}/apps/{$suggestedName}")
+            fn ($suggestedName) => $this->validateAppName($suggestedName) === null && ! is_dir("{$root}/apps/{$suggestedName}")
         );
 
         if (count($suggestions) === 0) {
@@ -532,7 +540,14 @@ final class CreateAppCommand extends BaseCommand
             required: true
         );
 
-        // Validate the chosen name
+        // Validate the chosen name format
+        $validation = $this->validateAppName($choice);
+        if ($validation !== null) {
+            $this->error($validation);
+            exit(Command::FAILURE);
+        }
+
+        // Validate the chosen name availability
         $chosenPath = "{$root}/apps/{$choice}";
         if (is_dir($chosenPath)) {
             $this->error("Application '{$choice}' also exists. Please try again with a different name.");
@@ -542,6 +557,36 @@ final class CreateAppCommand extends BaseCommand
         $this->info("✓ Application name '{$choice}' is available");
 
         return $choice;
+    }
+
+    /**
+     * Validate application name.
+     *
+     * Ensures the application name follows conventions:
+     * - Not empty
+     * - Contains only lowercase letters and hyphens
+     * - Starts with a letter
+     * - No consecutive hyphens
+     * - No numbers (since we generate PHP namespaces from names)
+     *
+     * @param  string|null $name The application name to validate
+     * @return string|null Error message if invalid, null if valid
+     */
+    private function validateAppName(?string $name): ?string
+    {
+        if ($name === null || trim($name) === '') {
+            return 'Application name cannot be empty';
+        }
+
+        if (preg_match('/^[a-z][a-z-]*$/', $name) !== 1) {
+            return 'Application name must start with a letter and contain only lowercase letters and hyphens (no numbers)';
+        }
+
+        if (str_contains($name, '--')) {
+            return 'Application name cannot contain consecutive hyphens';
+        }
+
+        return null;
     }
 
     /**

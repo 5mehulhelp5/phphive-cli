@@ -344,9 +344,10 @@ final class MakeWorkspaceCommand extends BaseCommand
      *
      * Ensures the workspace name follows conventions:
      * - Not empty
-     * - Contains only lowercase letters, numbers, and hyphens
+     * - Contains only lowercase letters and hyphens
      * - Starts with a letter
      * - No consecutive hyphens
+     * - No numbers (since we generate PHP namespaces from names)
      *
      * @param  string|null $name The workspace name to validate
      * @return string|null Error message if invalid, null if valid
@@ -357,8 +358,8 @@ final class MakeWorkspaceCommand extends BaseCommand
             return 'Workspace name cannot be empty';
         }
 
-        if (preg_match('/^[a-z][a-z0-9-]*$/', $name) !== 1) {
-            return 'Workspace name must start with a letter and contain only lowercase letters, numbers, and hyphens';
+        if (preg_match('/^[a-z][a-z-]*$/', $name) !== 1) {
+            return 'Workspace name must start with a letter and contain only lowercase letters and hyphens (no numbers)';
         }
 
         if (str_contains($name, '--')) {
