@@ -263,6 +263,30 @@ final class CreateAppCommand extends BaseCommand
                 'Redis port',
             )
             ->addOption(
+                'use-redis',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable Redis for caching and sessions',
+            )
+            ->addOption(
+                'use-elasticsearch',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable Elasticsearch for search',
+            )
+            ->addOption(
+                'use-meilisearch',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable Meilisearch for search',
+            )
+            ->addOption(
+                'use-minio',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable MinIO for object storage',
+            )
+            ->addOption(
                 'use-docker',
                 null,
                 InputOption::VALUE_NONE,
