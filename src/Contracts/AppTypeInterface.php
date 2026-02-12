@@ -129,6 +129,13 @@ interface AppTypeInterface
     public const CONFIG_INSTALL_OCTANE = 'install_octane';
 
     /**
+     * Octane server configuration key.
+     *
+     * Specifies which Octane server to use (e.g., 'roadrunner', 'swoole', 'frankenphp').
+     */
+    public const CONFIG_OCTANE_SERVER = 'octane_server';
+
+    /**
      * Include tests configuration key.
      *
      * Boolean flag indicating whether to include PHPUnit for testing.

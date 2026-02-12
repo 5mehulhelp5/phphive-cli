@@ -211,11 +211,24 @@ class LaravelAppType extends AbstractAppType
         );
 
         // Laravel Octane - High-performance application server
-        // Supercharges application performance using Swoole or RoadRunner
+        // Supercharges application performance using Swoole, RoadRunner, or FrankenPHP
         $config[AppTypeInterface::CONFIG_INSTALL_OCTANE] = $this->confirm(
             label: 'Install Laravel Octane (High-performance server)?',
             default: false
         );
+
+        // If Octane is selected, ask which server to use
+        if ($config[AppTypeInterface::CONFIG_INSTALL_OCTANE] === true) {
+            $config[AppTypeInterface::CONFIG_OCTANE_SERVER] = $this->select(
+                label: 'Octane server',
+                options: [
+                    'roadrunner' => 'RoadRunner (Pure PHP, no extensions required)',
+                    'frankenphp' => 'FrankenPHP (Modern, built on Caddy)',
+                    'swoole' => 'Swoole (Requires PHP extension via PECL)',
+                ],
+                default: 'roadrunner'
+            );
+        }
 
         return $config;
     }
@@ -343,10 +356,12 @@ class LaravelAppType extends AbstractAppType
         }
 
         // Install Laravel Octane if requested
-        // Octane provides high-performance application server with Swoole/RoadRunner
+        // Octane provides high-performance application server with Swoole/RoadRunner/FrankenPHP
+        // Using the user-selected server (default: RoadRunner - no PHP extensions required)
         if (($config[AppTypeInterface::CONFIG_INSTALL_OCTANE] ?? false) === true) {
             $commands[] = 'composer require laravel/octane';
-            $commands[] = 'php artisan octane:install --server=swoole';
+            $server = $config[AppTypeInterface::CONFIG_OCTANE_SERVER] ?? 'roadrunner';
+            $commands[] = "php artisan octane:install --server={$server}";
         }
 
         // =====================================================================
