@@ -250,25 +250,44 @@ class LaravelAppType extends AbstractAppType
                         // Detect OS and try appropriate installation method
                         $os = PHP_OS_FAMILY;
                         $installSuccess = false;
+                        $errorOutput = [];
 
                         if ($os === 'Darwin') {
                             // macOS - try Homebrew first
                             $this->info('Detected macOS - trying Homebrew installation...');
-                            exec('which brew', $output, $brewExists);
+                            exec('which brew 2>&1', $brewCheck, $brewExists);
 
                             if ($brewExists === 0) {
-                                exec('brew install swoole 2>&1', $output, $result);
+                                $this->info('Running: brew install swoole');
+                                exec('brew install swoole 2>&1', $errorOutput, $result);
                                 $installSuccess = ($result === 0);
+
+                                if (! $installSuccess) {
+                                    $this->error('Homebrew installation failed with exit code: ' . $result);
+                                    $this->note(implode("\n", $errorOutput), 'Error Output');
+                                }
                             } else {
                                 $this->warning('Homebrew not found. Trying PECL...');
-                                exec('pecl install swoole 2>&1', $output, $result);
+                                $this->info('Running: pecl install swoole');
+                                exec('pecl install swoole 2>&1', $errorOutput, $result);
                                 $installSuccess = ($result === 0);
+
+                                if (! $installSuccess) {
+                                    $this->error('PECL installation failed with exit code: ' . $result);
+                                    $this->note(implode("\n", $errorOutput), 'Error Output');
+                                }
                             }
                         } else {
                             // Linux or other - try PECL
                             $this->info('Trying PECL installation...');
-                            exec('pecl install swoole 2>&1', $output, $result);
+                            $this->info('Running: pecl install swoole');
+                            exec('pecl install swoole 2>&1', $errorOutput, $result);
                             $installSuccess = ($result === 0);
+
+                            if (! $installSuccess) {
+                                $this->error('PECL installation failed with exit code: ' . $result);
+                                $this->note(implode("\n", $errorOutput), 'Error Output');
+                            }
                         }
 
                         if ($installSuccess) {
