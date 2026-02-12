@@ -5,6 +5,35 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.12] - 2026-02-12
+
+### Added
+
+- **BaseCommand Enhancements**: Added common options and helper methods
+  - Added `--all` flag to apply operations to all workspaces
+  - Added `--dry-run` flag to preview operations without executing
+  - Added `outputJson()` method for JSON output formatting
+  - Added `outputTable()` method using Laravel Prompts for beautiful table display
+
+- **Workspace Selection Methods**: Added to `InteractsWithMonorepo` concern
+  - Added `selectWorkspace()` for interactive single workspace selection
+  - Added `selectWorkspaces()` for interactive multiple workspace selection
+  - Added `getAllWorkspaceNames()` to get all workspace names as array
+  - Added `shouldRunOnAll()` to check if --all flag is set
+
+### Fixed
+
+- **Laravel App Creation**: Fixed version selection bug in `make:app` command
+  - Changed version option keys from numeric strings to prefixed strings (v12, v11, v10)
+  - Prevents shell syntax errors in Composer create-project command
+  - Now correctly generates: `composer create-project laravel/laravel:12.x . --prefer-dist`
+
+### Changed
+
+- **Table Output**: Switched from Symfony Table component to Laravel Prompts `table()` function
+  - Provides more beautiful and consistent table formatting
+  - Aligns with existing Laravel Prompts usage throughout the CLI
+
 ## [1.0.11] - 2026-02-12
 
 ### Added
