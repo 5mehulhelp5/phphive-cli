@@ -45,19 +45,19 @@ use Symfony\Component\Process\Process;
  * Example usage:
  * ```bash
  * # Run with default settings (MSI 80%, 4 threads)
- * ./cli/bin/hive mutate
+ * hive mutate
  *
  * # Set custom MSI threshold
- * ./cli/bin/hive mutate --min-msi=90
+ * hive mutate --min-msi=90
  *
  * # Use more threads for faster execution
- * ./cli/bin/hive mutate --threads=8
+ * hive mutate --threads=8
  *
  * # Show all mutations (including killed ones)
- * ./cli/bin/hive mutate --show-mutations
+ * hive mutate --show-mutations
  *
  * # Strict settings for CI/CD
- * ./cli/bin/hive infection --min-msi=85 --min-covered-msi=90
+ * hive infection --min-msi=85 --min-covered-msi=90
  * ```
  *
  * @see BaseCommand For inherited functionality

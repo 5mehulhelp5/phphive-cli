@@ -39,16 +39,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Check all workspaces
- * ./cli/bin/hive typecheck
+ * hive typecheck
  *
  * # Check specific workspace
- * ./cli/bin/hive tc --workspace calculator
+ * hive tc --workspace calculator
  *
  * # Check with custom PHPStan level
- * ./cli/bin/hive phpstan --level 9
+ * hive phpstan --level 9
  *
  * # Check specific workspace at max level
- * ./cli/bin/hive tc -w demo-app -l 9
+ * hive tc -w demo-app -l 9
  * ```
  *
  * @see BaseCommand For inherited functionality

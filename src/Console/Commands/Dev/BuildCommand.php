@@ -56,22 +56,22 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Build all workspaces
- * ./cli/bin/hive build
+ * hive build
  *
  * # Build specific workspace
- * ./cli/bin/hive build --workspace demo-app
+ * hive build --workspace demo-app
  *
  * # Build with shorthand
- * ./cli/bin/hive build -w calculator
+ * hive build -w calculator
  *
  * # Force rebuild (ignore cache)
- * ./cli/bin/hive build --force
+ * hive build --force
  *
  * # Force rebuild specific workspace
- * ./cli/bin/hive build -w demo-app --force
+ * hive build -w demo-app --force
  *
  * # Disable Turbo cache completely
- * ./cli/bin/hive build --no-cache
+ * hive build --no-cache
  * ```
  *
  * @see BaseCommand For inherited functionality and common options

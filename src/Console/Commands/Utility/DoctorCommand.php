@@ -65,11 +65,11 @@ use function version_compare;
  * Example usage:
  * ```bash
  * # Run all health checks
- * ./cli/bin/hive doctor
+ * hive doctor
  *
  * # Using aliases
- * ./cli/bin/hive check
- * ./cli/bin/hive health
+ * hive check
+ * hive health
  * ```
  *
  * Example output:

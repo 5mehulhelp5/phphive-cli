@@ -45,16 +45,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Add production dependency
- * ./cli/bin/hive require symfony/console
+ * hive require symfony/console
  *
  * # Add dev dependency
- * ./cli/bin/hive require phpunit/phpunit --dev
+ * hive require phpunit/phpunit --dev
  *
  * # Add to specific workspace
- * ./cli/bin/hive require guzzlehttp/guzzle --workspace=api
+ * hive require guzzlehttp/guzzle --workspace=api
  *
  * # Add with version constraint
- * ./cli/bin/hive require symfony/http-client:^7.0 -w api
+ * hive require symfony/http-client:^7.0 -w api
  * ```
  *
  * @see BaseCommand For inherited functionality

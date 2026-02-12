@@ -57,20 +57,20 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Update all dependencies in selected workspace
- * ./cli/bin/hive update
+ * hive update
  *
  * # Update all dependencies in specific workspace
- * ./cli/bin/hive update --workspace=api
+ * hive update --workspace=api
  *
  * # Update specific package only
- * ./cli/bin/hive update symfony/console
+ * hive update symfony/console
  *
  * # Update specific package in specific workspace
- * ./cli/bin/hive update guzzlehttp/guzzle -w api
+ * hive update guzzlehttp/guzzle -w api
  *
  * # Using aliases
- * ./cli/bin/hive up symfony/http-client -w demo-app
- * ./cli/bin/hive upgrade --workspace=calculator
+ * hive up symfony/http-client -w demo-app
+ * hive upgrade --workspace=calculator
  * ```
  *
  * @see BaseCommand For inherited functionality

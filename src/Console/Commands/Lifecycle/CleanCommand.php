@@ -70,16 +70,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Clean all workspaces
- * ./cli/bin/hive clean
+ * hive clean
  *
  * # Clean specific workspace
- * ./cli/bin/hive clean --workspace demo-app
+ * hive clean --workspace demo-app
  *
  * # Clean with shorthand
- * ./cli/bin/hive clean -w calculator
+ * hive clean -w calculator
  *
  * # Clean with fresh Turbo cache
- * ./cli/bin/hive clean --no-cache
+ * hive clean --no-cache
  * ```
  *
  * @see BaseCommand For inherited functionality and common options

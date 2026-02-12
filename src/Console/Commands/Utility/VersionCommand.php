@@ -58,16 +58,16 @@ use function trim;
  * Example usage:
  * ```bash
  * # Display all version information
- * ./cli/bin/hive version
+ * hive version
  *
  * # Using short alias
- * ./cli/bin/hive ver
+ * hive ver
  *
  * # Using single letter alias
- * ./cli/bin/hive v
+ * hive v
  *
  * # Standard --version flag
- * ./cli/bin/hive --version
+ * hive --version
  * ```
  *
  * Example output:

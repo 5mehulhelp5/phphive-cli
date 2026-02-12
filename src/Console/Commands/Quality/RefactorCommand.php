@@ -48,16 +48,16 @@ use Symfony\Component\Process\Process;
  * Example usage:
  * ```bash
  * # Apply refactoring changes
- * ./cli/bin/hive refactor
+ * hive refactor
  *
  * # Preview changes without applying (safe)
- * ./cli/bin/hive refactor --dry-run
+ * hive refactor --dry-run
  *
  * # Clear cache and refactor
- * ./cli/bin/hive refactor --clear-cache
+ * hive refactor --clear-cache
  *
  * # Preview with fresh cache
- * ./cli/bin/hive rector --clear-cache --dry-run
+ * hive rector --clear-cache --dry-run
  * ```
  *
  * @see BaseCommand For inherited functionality

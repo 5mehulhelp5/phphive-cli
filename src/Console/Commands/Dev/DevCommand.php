@@ -58,16 +58,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Start dev server (interactive selection)
- * ./cli/bin/hive dev
+ * hive dev
  *
  * # Start specific app
- * ./cli/bin/hive dev --workspace demo-app
+ * hive dev --workspace demo-app
  *
  * # Start with shorthand
- * ./cli/bin/hive dev -w calculator
+ * hive dev -w calculator
  *
  * # Start with custom port (future)
- * ./cli/bin/hive dev --workspace demo-app --port 3000
+ * hive dev --workspace demo-app --port 3000
  * ```
  *
  * @see BaseCommand For inherited functionality and common options

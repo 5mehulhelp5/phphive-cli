@@ -53,16 +53,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Deploy all apps (full pipeline)
- * ./cli/bin/hive deploy
+ * hive deploy
  *
  * # Deploy specific app
- * ./cli/bin/hive deploy --workspace demo-app
+ * hive deploy --workspace demo-app
  *
  * # Deploy without running tests (faster but risky)
- * ./cli/bin/hive deploy --skip-tests
+ * hive deploy --skip-tests
  *
  * # Deploy specific app without tests
- * ./cli/bin/hive deploy -w demo-app --skip-tests
+ * hive deploy -w demo-app --skip-tests
  * ```
  *
  * @see BaseCommand For inherited functionality

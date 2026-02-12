@@ -67,22 +67,22 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Publish with interactive selection
- * ./cli/bin/hive publish
+ * hive publish
  *
  * # Publish specific package
- * ./cli/bin/hive publish --workspace calculator
+ * hive publish --workspace calculator
  *
  * # Publish with custom tag (beta release)
- * ./cli/bin/hive publish -w calculator -t beta
+ * hive publish -w calculator -t beta
  *
  * # Publish alpha version
- * ./cli/bin/hive publish -w calculator --tag alpha
+ * hive publish -w calculator --tag alpha
  *
  * # Dry run (test without publishing)
- * ./cli/bin/hive publish -w calculator --dry-run
+ * hive publish -w calculator --dry-run
  *
  * # Publish release candidate
- * ./cli/bin/hive publish -w calculator -t rc
+ * hive publish -w calculator -t rc
  * ```
  *
  * @see BaseCommand For inherited functionality

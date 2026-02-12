@@ -62,34 +62,34 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Run migrations
- * ./cli/bin/hive artisan migrate --workspace=api
+ * hive artisan migrate --workspace=api
  *
  * # Clear all caches
- * ./cli/bin/hive artisan cache:clear -w admin
+ * hive artisan cache:clear -w admin
  *
  * # Generate application key
- * ./cli/bin/hive artisan key:generate
+ * hive artisan key:generate
  *
  * # List all routes
- * ./cli/bin/hive artisan route:list
+ * hive artisan route:list
  *
  * # Create a controller
- * ./cli/bin/hive artisan make:controller UserController -w api
+ * hive artisan make:controller UserController -w api
  *
  * # Run database seeder
- * ./cli/bin/hive artisan db:seed --class=UserSeeder
+ * hive artisan db:seed --class=UserSeeder
  *
  * # Start queue worker
- * ./cli/bin/hive artisan queue:work --workspace=api
+ * hive artisan queue:work --workspace=api
  *
  * # Run tests
- * ./cli/bin/hive artisan test --parallel
+ * hive artisan test --parallel
  *
  * # Optimize application
- * ./cli/bin/hive artisan optimize
+ * hive artisan optimize
  *
  * # Using alias
- * ./cli/bin/hive art migrate:fresh --seed -w api
+ * hive art migrate:fresh --seed -w api
  * ```
  *
  * Common options inherited from BaseCommand:

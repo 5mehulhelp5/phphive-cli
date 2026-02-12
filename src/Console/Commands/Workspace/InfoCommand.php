@@ -47,17 +47,17 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Show info for specific workspace
- * ./cli/bin/hive info api
+ * hive info api
  *
  * # Show info for calculator workspace
- * ./cli/bin/hive info calculator
+ * hive info calculator
  *
  * # Interactive selection (no workspace specified)
- * ./cli/bin/hive info
+ * hive info
  *
  * # Using alias
- * ./cli/bin/hive show demo-app
- * ./cli/bin/hive details demo-app
+ * hive show demo-app
+ * hive details demo-app
  * ```
  *
  * @see BaseCommand For inherited functionality

@@ -82,37 +82,37 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Run tasks with Turbo directly
- * ./cli/bin/hive turbo run build --filter=api
- * ./cli/bin/hive turbo run test --force
+ * hive turbo run build --filter=api
+ * hive turbo run test --force
  *
  * # Prune workspace for deployment
- * ./cli/bin/hive turbo prune --scope=api
- * ./cli/bin/hive turbo prune --scope=api --docker
+ * hive turbo prune --scope=api
+ * hive turbo prune --scope=api --docker
  *
  * # Generate task dependency graph
- * ./cli/bin/hive turbo run build --graph
- * ./cli/bin/hive turbo run build --dry-run
+ * hive turbo run build --graph
+ * hive turbo run build --dry-run
  *
  * # Manage Turbo daemon
- * ./cli/bin/hive turbo daemon start
- * ./cli/bin/hive turbo daemon stop
- * ./cli/bin/hive turbo daemon status
+ * hive turbo daemon start
+ * hive turbo daemon stop
+ * hive turbo daemon status
  *
  * # Remote cache management
- * ./cli/bin/hive turbo login
- * ./cli/bin/hive turbo link
- * ./cli/bin/hive turbo unlink
+ * hive turbo login
+ * hive turbo link
+ * hive turbo unlink
  *
  * # Advanced run options
- * ./cli/bin/hive turbo run test --concurrency=2
- * ./cli/bin/hive turbo run build --output-logs=hash-only
- * ./cli/bin/hive turbo run lint --filter=[HEAD^1]
+ * hive turbo run test --concurrency=2
+ * hive turbo run build --output-logs=hash-only
+ * hive turbo run lint --filter=[HEAD^1]
  *
  * # Multiple filters
- * ./cli/bin/hive turbo run build --filter=api --filter=admin
+ * hive turbo run build --filter=api --filter=admin
  *
  * # Using alias
- * ./cli/bin/hive tb run build
+ * hive tb run build
  * ```
  *
  * When to use this vs RunCommand:

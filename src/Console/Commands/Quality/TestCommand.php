@@ -44,25 +44,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Run all tests in all workspaces
- * ./cli/bin/hive test
+ * hive test
  *
  * # Test specific workspace
- * ./cli/bin/hive test --workspace calculator
+ * hive test --workspace calculator
  *
  * # Run only unit tests
- * ./cli/bin/hive test --unit
+ * hive test --unit
  *
  * # Run only feature tests
- * ./cli/bin/hive test --feature
+ * hive test --feature
  *
  * # Generate coverage report
- * ./cli/bin/hive test --coverage
+ * hive test --coverage
  *
  * # Filter tests by name pattern
- * ./cli/bin/hive test --filter=UserTest
+ * hive test --filter=UserTest
  *
  * # Combine options
- * ./cli/bin/hive t -w demo-app --unit --filter=Auth
+ * hive t -w demo-app --unit --filter=Auth
  * ```
  *
  * @see BaseCommand For inherited functionality

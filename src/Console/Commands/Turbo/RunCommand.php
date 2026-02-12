@@ -80,32 +80,32 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Run build task in all workspaces
- * ./cli/bin/hive run build
+ * hive run build
  *
  * # Run tests in specific workspace
- * ./cli/bin/hive run test --workspace api
- * ./cli/bin/hive run test -w admin
+ * hive run test --workspace api
+ * hive run test -w admin
  *
  * # Force run lint (ignore cache)
- * ./cli/bin/hive run lint --force
- * ./cli/bin/hive run lint -f
+ * hive run lint --force
+ * hive run lint -f
  *
  * # Run custom task without caching
- * ./cli/bin/hive run custom-task --no-cache
+ * hive run custom-task --no-cache
  *
  * # Run in parallel mode
- * ./cli/bin/hive run build --parallel
- * ./cli/bin/hive run build -p
+ * hive run build --parallel
+ * hive run build -p
  *
  * # Continue on error (don't stop on first failure)
- * ./cli/bin/hive run test --continue
+ * hive run test --continue
  *
  * # Combine multiple options
- * ./cli/bin/hive run build -w api --force --parallel
+ * hive run build -w api --force --parallel
  *
  * # Using aliases
- * ./cli/bin/hive exec test
- * ./cli/bin/hive execute lint
+ * hive exec test
+ * hive execute lint
  * ```
  *
  * Task requirements:

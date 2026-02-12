@@ -39,13 +39,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Check code style for all workspaces
- * ./cli/bin/hive lint
+ * hive lint
  *
  * # Check specific workspace
- * ./cli/bin/hive lint --workspace demo-app
+ * hive lint --workspace demo-app
  *
  * # Auto-fix issues (delegates to format command)
- * ./cli/bin/hive lint --fix
+ * hive lint --fix
  * ```
  *
  * @see BaseCommand For inherited functionality

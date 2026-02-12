@@ -65,35 +65,35 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Reindex all indexers
- * ./cli/bin/hive magento indexer:reindex --workspace=shop
+ * hive magento indexer:reindex --workspace=shop
  *
  * # Flush all caches
- * ./cli/bin/hive magento cache:flush -w shop
+ * hive magento cache:flush -w shop
  *
  * # Deploy static content for production
- * ./cli/bin/hive magento setup:static-content:deploy en_US -f
+ * hive magento setup:static-content:deploy en_US -f
  *
  * # Run setup upgrade after installing modules
- * ./cli/bin/hive magento setup:upgrade --keep-generated
+ * hive magento setup:upgrade --keep-generated
  *
  * # Compile dependency injection
- * ./cli/bin/hive magento setup:di:compile
+ * hive magento setup:di:compile
  *
  * # Enable a module
- * ./cli/bin/hive magento module:enable Vendor_Module -w shop
+ * hive magento module:enable Vendor_Module -w shop
  *
  * # Set deployment mode to production
- * ./cli/bin/hive magento deploy:mode:set production
+ * hive magento deploy:mode:set production
  *
  * # Create admin user
- * ./cli/bin/hive magento admin:user:create --admin-user=admin --admin-password=Admin123
+ * hive magento admin:user:create --admin-user=admin --admin-password=Admin123
  *
  * # Check module status
- * ./cli/bin/hive magento module:status
+ * hive magento module:status
  *
  * # Using aliases
- * ./cli/bin/hive mage cache:flush -w shop
- * ./cli/bin/hive bin/magento indexer:reindex
+ * hive mage cache:flush -w shop
+ * hive bin/magento indexer:reindex
  * ```
  *
  * Common options inherited from BaseCommand:

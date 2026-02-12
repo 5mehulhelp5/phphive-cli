@@ -65,38 +65,38 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Clear cache
- * ./cli/bin/hive console cache:clear --workspace=api
+ * hive console cache:clear --workspace=api
  *
  * # Run database migrations
- * ./cli/bin/hive console doctrine:migrations:migrate -w admin
+ * hive console doctrine:migrations:migrate -w admin
  *
  * # List all routes
- * ./cli/bin/hive console debug:router
+ * hive console debug:router
  *
  * # Create a new entity
- * ./cli/bin/hive console make:entity User -w api
+ * hive console make:entity User -w api
  *
  * # Dump environment variables
- * ./cli/bin/hive console debug:dotenv
+ * hive console debug:dotenv
  *
  * # Update database schema
- * ./cli/bin/hive console doctrine:schema:update --force
+ * hive console doctrine:schema:update --force
  *
  * # Consume messenger messages
- * ./cli/bin/hive console messenger:consume async --limit=10
+ * hive console messenger:consume async --limit=10
  *
  * # Hash a password
- * ./cli/bin/hive console security:hash-password
+ * hive console security:hash-password
  *
  * # Install assets
- * ./cli/bin/hive console assets:install public
+ * hive console assets:install public
  *
  * # Check security vulnerabilities
- * ./cli/bin/hive console security:check
+ * hive console security:check
  *
  * # Using aliases
- * ./cli/bin/hive sf cache:clear -w api
- * ./cli/bin/hive symfony debug:router
+ * hive sf cache:clear -w api
+ * hive symfony debug:router
  * ```
  *
  * Common options inherited from BaseCommand:

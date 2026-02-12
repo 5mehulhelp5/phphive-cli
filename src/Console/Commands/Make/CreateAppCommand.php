@@ -50,16 +50,16 @@ use Symfony\Component\Process\Process;
  * Example usage:
  * ```bash
  * # Interactive mode - prompts for app type
- * ./cli/bin/hive create:app my-app
+ * hive create:app my-app
  *
  * # Specify app type directly
- * ./cli/bin/hive create:app my-app --type=laravel
- * ./cli/bin/hive create:app shop --type=magento
- * ./cli/bin/hive create:app api --type=symfony
+ * hive create:app my-app --type=laravel
+ * hive create:app shop --type=magento
+ * hive create:app api --type=symfony
  *
  * # Using aliases
- * ./cli/bin/hive make:app dashboard --type=laravel
- * ./cli/bin/hive new:app service --type=skeleton
+ * hive make:app dashboard --type=laravel
+ * hive new:app service --type=skeleton
  * ```
  *
  * After creation workflow:

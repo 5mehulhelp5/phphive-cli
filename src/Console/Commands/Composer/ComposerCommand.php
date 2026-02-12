@@ -56,22 +56,22 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Show installed packages
- * ./cli/bin/hive composer show --installed
+ * hive composer show --installed
  *
  * # Dump optimized autoloader
- * ./cli/bin/hive composer dump-autoload -o --workspace=api
+ * hive composer dump-autoload -o --workspace=api
  *
  * # Validate composer.json
- * ./cli/bin/hive composer validate -w calculator
+ * hive composer validate -w calculator
  *
  * # Check for security vulnerabilities
- * ./cli/bin/hive composer audit
+ * hive composer audit
  *
  * # Remove a package
- * ./cli/bin/hive composer remove symfony/console -w demo-app
+ * hive composer remove symfony/console -w demo-app
  *
  * # Run custom script
- * ./cli/bin/hive composer run-script post-install
+ * hive composer run-script post-install
  * ```
  *
  * @see BaseCommand For inherited functionality

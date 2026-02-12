@@ -55,25 +55,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Install all workspaces
- * ./cli/bin/hive install
+ * hive install
  *
  * # Install with alias
- * ./cli/bin/hive i
+ * hive i
  *
  * # Install specific workspace
- * ./cli/bin/hive install --workspace demo-app
+ * hive install --workspace demo-app
  *
  * # Install with shorthand
- * ./cli/bin/hive i -w calculator
+ * hive i -w calculator
  *
  * # Force reinstall (ignore cache)
- * ./cli/bin/hive install --force
+ * hive install --force
  *
  * # Force reinstall specific workspace
- * ./cli/bin/hive install -w demo-app -f
+ * hive install -w demo-app -f
  *
  * # Disable Turbo cache completely
- * ./cli/bin/hive install --no-cache
+ * hive install --no-cache
  * ```
  *
  * @see BaseCommand For inherited functionality and common options

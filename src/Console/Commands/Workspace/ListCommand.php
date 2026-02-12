@@ -55,22 +55,22 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # List all workspaces in table format
- * ./cli/bin/hive list-workspaces
+ * hive list-workspaces
  *
  * # List apps only
- * ./cli/bin/hive list-workspaces --apps
- * ./cli/bin/hive ls -a
+ * hive list-workspaces --apps
+ * hive ls -a
  *
  * # List packages only
- * ./cli/bin/hive list-workspaces --packages
- * ./cli/bin/hive workspaces -p
+ * hive list-workspaces --packages
+ * hive workspaces -p
  *
  * # Output as JSON for scripting
- * ./cli/bin/hive list-workspaces --json
- * ./cli/bin/hive ls -j
+ * hive list-workspaces --json
+ * hive ls -j
  *
  * # Combine filters (apps only as JSON)
- * ./cli/bin/hive list-workspaces --apps --json
+ * hive list-workspaces --apps --json
  * ```
  *
  * @see BaseCommand For inherited functionality

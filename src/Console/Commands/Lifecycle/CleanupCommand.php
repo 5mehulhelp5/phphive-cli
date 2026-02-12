@@ -81,13 +81,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Example usage:
  * ```bash
  * # Deep clean everything (requires confirmation)
- * ./cli/bin/hive cleanup
+ * hive cleanup
  *
  * # After cleanup, reinstall dependencies
  * pnpm install
  *
  * # Then rebuild everything
- * ./cli/bin/hive build
+ * hive build
  * ```
  *
  * WARNING: This is a destructive operation. You will need to run

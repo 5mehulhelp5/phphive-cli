@@ -98,17 +98,17 @@ use function ucfirst;
  * Example usage:
  * ```bash
  * # Create a logging package
- * ./cli/bin/hive create:package logger
+ * hive create:package logger
  *
  * # Create an HTTP client package
- * ./cli/bin/hive create:package http-client
+ * hive create:package http-client
  *
  * # Create a validation package
- * ./cli/bin/hive create:package validator
+ * hive create:package validator
  *
  * # Using aliases
- * ./cli/bin/hive make:package database
- * ./cli/bin/hive new:package cache
+ * hive make:package database
+ * hive new:package cache
  * ```
  *
  * After creation workflow:
