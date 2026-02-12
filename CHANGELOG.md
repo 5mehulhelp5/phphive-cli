@@ -5,6 +5,21 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-02-12
+
+### Added
+
+- **Automatic Version Management**: Release workflow now automatically updates version numbers
+  - Updates `APP_VERSION` constant in `Application.php`
+  - Updates version badge in `.github/assets/banner.svg`
+  - Commits changes automatically with `[skip ci]` flag
+  - Ensures version consistency across all files
+
+### Changed
+
+- Version management is now fully automated through GitHub Actions
+- No manual version updates needed in code files
+
 ## [1.0.5] - 2026-02-12
 
 ### Changed
