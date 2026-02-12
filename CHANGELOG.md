@@ -5,6 +5,21 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-02-12
+
+### Changed
+
+- **Documentation Updates**: Updated all command examples and documentation
+  - Changed binary references from `./cli/bin/hive` to `hive` for consistency
+  - Aligned with global installation usage pattern
+  - Better consistency with template repository structure
+
+### Fixed
+
+- **Template Repository**: Fixed package.json scripts to use correct binary path
+  - Changed from `./cli/bin/hive` to `./bin/hive`
+  - Fixes postinstall and other npm scripts in cloned workspaces
+
 ## [1.0.4] - 2026-02-12
 
 ### Changed
