@@ -253,21 +253,13 @@ class LaravelAppType extends AbstractAppType
                         $errorOutput = [];
 
                         if ($os === 'Darwin') {
-                            // macOS - try Homebrew first
-                            $this->info('Detected macOS - trying Homebrew installation...');
-                            exec('which brew 2>&1', $brewCheck, $brewExists);
+                            // macOS - Swoole is not available via Homebrew, use PECL
+                            $this->info('Detected macOS - Swoole must be installed via PECL');
 
-                            if ($brewExists === 0) {
-                                $this->info('Running: brew install swoole');
-                                exec('brew install swoole 2>&1', $errorOutput, $result);
-                                $installSuccess = ($result === 0);
+                            // Check if PECL is available
+                            exec('which pecl 2>&1', $peclCheck, $peclExists);
 
-                                if (! $installSuccess) {
-                                    $this->error('Homebrew installation failed with exit code: ' . $result);
-                                    $this->note(implode("\n", $errorOutput), 'Error Output');
-                                }
-                            } else {
-                                $this->warning('Homebrew not found. Trying PECL...');
+                            if ($peclExists === 0) {
                                 $this->info('Running: pecl install swoole');
                                 exec('pecl install swoole 2>&1', $errorOutput, $result);
                                 $installSuccess = ($result === 0);
@@ -276,6 +268,16 @@ class LaravelAppType extends AbstractAppType
                                     $this->error('PECL installation failed with exit code: ' . $result);
                                     $this->note(implode("\n", $errorOutput), 'Error Output');
                                 }
+                            } else {
+                                $this->error('PECL is not installed.');
+                                $this->note(
+                                    "PECL is required to install Swoole on macOS.\n\n" .
+                                    "Install PECL first:\n" .
+                                    "  brew install php (includes PECL)\n\n" .
+                                    "Or if using Herd/Valet:\n" .
+                                    '  PECL should already be available',
+                                    'PECL Required'
+                                );
                             }
                         } else {
                             // Linux or other - try PECL
@@ -297,22 +299,24 @@ class LaravelAppType extends AbstractAppType
                             $this->error('Automatic installation failed.');
                             $this->note(
                                 "Please install Swoole manually:\n\n" .
-                                "  macOS (with Homebrew):\n" .
-                                "    brew install swoole\n\n" .
-                                "  Linux (with PECL):\n" .
+                                "  macOS:\n" .
                                 "    pecl install swoole\n\n" .
-                                '  Or use Docker with a Swoole-enabled PHP image.',
+                                "  Linux:\n" .
+                                "    pecl install swoole\n\n" .
+                                "  Or use Docker with a Swoole-enabled PHP image.\n\n" .
+                                "Note: You may need to add 'extension=swoole.so' to your php.ini",
                                 'Manual Installation'
                             );
                         }
                     } else {
                         $this->note(
                             "To install Swoole manually:\n\n" .
-                            "  macOS (with Homebrew):\n" .
-                            "    brew install swoole\n\n" .
-                            "  Linux (with PECL):\n" .
+                            "  macOS:\n" .
                             "    pecl install swoole\n\n" .
-                            '  Or use Docker with a Swoole-enabled PHP image.',
+                            "  Linux:\n" .
+                            "    pecl install swoole\n\n" .
+                            "  Or use Docker with a Swoole-enabled PHP image.\n\n" .
+                            "Note: You may need to add 'extension=swoole.so' to your php.ini",
                             'Manual Installation'
                         );
                     }
