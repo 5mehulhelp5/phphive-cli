@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\AppTypes;
 
+use PhpHive\Cli\Concerns\InteractsWithDatabase;
+use PhpHive\Cli\Concerns\InteractsWithDocker;
+use PhpHive\Cli\Concerns\InteractsWithElasticsearch;
+use PhpHive\Cli\Concerns\InteractsWithMeilisearch;
+use PhpHive\Cli\Concerns\InteractsWithMinio;
 use PhpHive\Cli\Concerns\InteractsWithPrompts;
+use PhpHive\Cli\Concerns\InteractsWithRedis;
 use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\Support\Composer;
 use PhpHive\Cli\Support\Filesystem;
@@ -57,7 +63,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 abstract class AbstractAppType implements AppTypeInterface
 {
+    use InteractsWithDatabase;
+    use InteractsWithDocker;
+    use InteractsWithElasticsearch;
+    use InteractsWithMeilisearch;
+    use InteractsWithMinio;
     use InteractsWithPrompts;
+    use InteractsWithRedis;
 
     /**
      * Filesystem instance for file operations.
