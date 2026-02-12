@@ -5,6 +5,23 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-02-12
+
+### Added
+
+- **Update Checker**: Automatic version checking with beautiful notification banner
+  - Checks Packagist API for latest version once per day
+  - Caches results in `~/.cache/phphive/update-check.json` (respects `XDG_CACHE_HOME`)
+  - Displays update notification similar to npm/pnpm/yarn
+  - Non-blocking with 2-second timeout
+  - Shows current version → latest version with update command
+  - Only checks when running actual commands (not help/version)
+
+### Changed
+
+- Update notifications are now displayed automatically before the banner
+- Cache directory follows XDG Base Directory specification
+
 ## [1.0.7] - 2026-02-12
 
 ### Fixed
