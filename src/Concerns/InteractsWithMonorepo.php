@@ -13,6 +13,9 @@ use InvalidArgumentException;
 
 use function is_dir;
 use function json_decode;
+
+use PhpHive\Cli\Contracts\AppTypeInterface;
+
 use function preg_match_all;
 
 use RuntimeException;
@@ -179,7 +182,7 @@ trait InteractsWithMonorepo
                         'name' => $name,
                         'path' => $path,
                         // Determine type based on path (apps/ vs packages/)
-                        'type' => str_contains($path, '/apps/') ? 'app' : 'package',
+                        'type' => str_contains($path, '/apps/') ? AppTypeInterface::WORKSPACE_TYPE_APP : AppTypeInterface::WORKSPACE_TYPE_PACKAGE,
                         'packageName' => $packageJson['name'] ?? $name,
                         'hasComposer' => file_exists($path . '/composer.json'),
                         'hasPackageJson' => true,
@@ -247,7 +250,7 @@ trait InteractsWithMonorepo
      */
     protected function getApps(): array
     {
-        return array_filter($this->getWorkspaces(), fn (array $w): bool => $w['type'] === 'app');
+        return array_filter($this->getWorkspaces(), fn (array $w): bool => $w['type'] === AppTypeInterface::WORKSPACE_TYPE_APP);
     }
 
     /**
@@ -260,7 +263,7 @@ trait InteractsWithMonorepo
      */
     protected function getPackages(): array
     {
-        return array_filter($this->getWorkspaces(), fn (array $w): bool => $w['type'] === 'package');
+        return array_filter($this->getWorkspaces(), fn (array $w): bool => $w['type'] === AppTypeInterface::WORKSPACE_TYPE_PACKAGE);
     }
 
     /**

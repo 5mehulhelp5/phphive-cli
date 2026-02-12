@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpHive\Cli\Concerns;
 
 use mysqli;
+use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\Support\Filesystem;
 use RuntimeException;
 
@@ -349,13 +350,13 @@ trait InteractsWithDatabase
         }
 
         return [
-            'db_type' => $dbType,
-            'db_host' => 'localhost',
-            'db_port' => $port,
-            'db_name' => $dbName,
-            'db_user' => $dbUser,
-            'db_password' => $dbPassword,
-            'using_docker' => true,
+            AppTypeInterface::CONFIG_DB_TYPE => $dbType,
+            AppTypeInterface::CONFIG_DB_HOST => 'localhost',
+            AppTypeInterface::CONFIG_DB_PORT => $port,
+            AppTypeInterface::CONFIG_DB_NAME => $dbName,
+            AppTypeInterface::CONFIG_DB_USER => $dbUser,
+            AppTypeInterface::CONFIG_DB_PASSWORD => $dbPassword,
+            AppTypeInterface::CONFIG_USING_DOCKER => true,
         ];
     }
 
@@ -492,8 +493,8 @@ trait InteractsWithDatabase
             $dbConfig = $this->promptAutomaticDatabaseSetup($appName);
             if ($dbConfig !== null) {
                 // Add type and docker flag
-                $dbConfig['db_type'] = 'mysql';
-                $dbConfig['using_docker'] = false;
+                $dbConfig[AppTypeInterface::CONFIG_DB_TYPE] = 'mysql';
+                $dbConfig[AppTypeInterface::CONFIG_USING_DOCKER] = false;
 
                 return $dbConfig;
             }
@@ -501,8 +502,8 @@ trait InteractsWithDatabase
 
         // Fall back to manual
         $dbConfig = $this->promptManualDatabaseSetup($appName);
-        $dbConfig['db_type'] = 'mysql';
-        $dbConfig['using_docker'] = false;
+        $dbConfig[AppTypeInterface::CONFIG_DB_TYPE] = 'mysql';
+        $dbConfig[AppTypeInterface::CONFIG_USING_DOCKER] = false;
 
         return $dbConfig;
     }
@@ -840,11 +841,11 @@ trait InteractsWithDatabase
 
         // Return database configuration
         return [
-            'db_host' => $host,
-            'db_port' => $port,
-            'db_name' => $dbName,
-            'db_user' => $dbUser,
-            'db_password' => $dbPass,
+            AppTypeInterface::CONFIG_DB_HOST => $host,
+            AppTypeInterface::CONFIG_DB_PORT => $port,
+            AppTypeInterface::CONFIG_DB_NAME => $dbName,
+            AppTypeInterface::CONFIG_DB_USER => $dbUser,
+            AppTypeInterface::CONFIG_DB_PASSWORD => $dbPass,
         ];
     }
 
@@ -901,11 +902,11 @@ trait InteractsWithDatabase
         if (! $this->input->isInteractive()) {
             // Return defaults for non-interactive mode
             return [
-                'db_host' => '127.0.0.1',
-                'db_port' => 3306,
-                'db_name' => $normalizedName,
-                'db_user' => 'root',
-                'db_password' => '',
+                AppTypeInterface::CONFIG_DB_HOST => '127.0.0.1',
+                AppTypeInterface::CONFIG_DB_PORT => 3306,
+                AppTypeInterface::CONFIG_DB_NAME => $normalizedName,
+                AppTypeInterface::CONFIG_DB_USER => 'root',
+                AppTypeInterface::CONFIG_DB_PASSWORD => '',
             ];
         }
 
@@ -966,11 +967,11 @@ trait InteractsWithDatabase
 
         // Return database configuration
         return [
-            'db_host' => $host,
-            'db_port' => $port,
-            'db_name' => $dbName,
-            'db_user' => $dbUser,
-            'db_password' => $dbPass,
+            AppTypeInterface::CONFIG_DB_HOST => $host,
+            AppTypeInterface::CONFIG_DB_PORT => $port,
+            AppTypeInterface::CONFIG_DB_NAME => $dbName,
+            AppTypeInterface::CONFIG_DB_USER => $dbUser,
+            AppTypeInterface::CONFIG_DB_PASSWORD => $dbPass,
         ];
     }
 }

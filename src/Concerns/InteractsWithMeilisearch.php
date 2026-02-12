@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
+use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\Support\Filesystem;
 use PhpHive\Cli\Support\Process;
 use RuntimeException;
@@ -304,7 +305,7 @@ trait InteractsWithMeilisearch
             'meilisearch_host' => 'http://localhost',
             'meilisearch_port' => $port,
             'meilisearch_master_key' => $masterKey,
-            'using_docker' => true,
+            AppTypeInterface::CONFIG_USING_DOCKER => true,
         ];
     }
 
@@ -581,7 +582,7 @@ YAML;
                     'meilisearch_host' => 'http://localhost',
                     'meilisearch_port' => 7700,
                     'meilisearch_master_key' => $masterKey,
-                    'using_docker' => false,
+                    AppTypeInterface::CONFIG_USING_DOCKER => false,
                 ];
             }
 
@@ -874,7 +875,7 @@ YAML;
                 'meilisearch_host' => 'http://localhost',
                 'meilisearch_port' => 7700,
                 'meilisearch_master_key' => bin2hex(random_bytes(16)),
-                'using_docker' => false,
+                AppTypeInterface::CONFIG_USING_DOCKER => false,
             ];
         }
 
@@ -938,7 +939,7 @@ YAML;
             'meilisearch_host' => $host,
             'meilisearch_port' => $port,
             'meilisearch_master_key' => $masterKey,
-            'using_docker' => false,
+            AppTypeInterface::CONFIG_USING_DOCKER => false,
         ];
     }
 }

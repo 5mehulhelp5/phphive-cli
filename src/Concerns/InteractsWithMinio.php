@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
+use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\Support\Filesystem;
 use PhpHive\Cli\Support\Process;
 use RuntimeException;
@@ -341,7 +342,7 @@ trait InteractsWithMinio
             'minio_secret_key' => $secretKey,
             'minio_bucket' => $bucketName,
             'minio_console_port' => 9001,
-            'using_docker' => true,
+            AppTypeInterface::CONFIG_USING_DOCKER => true,
         ];
     }
 
@@ -616,7 +617,7 @@ YAML;
                     'minio_secret_key' => 'minioadmin',
                     'minio_bucket' => $normalizedName,
                     'minio_console_port' => 9001,
-                    'using_docker' => false,
+                    AppTypeInterface::CONFIG_USING_DOCKER => false,
                 ];
             }
 
@@ -837,7 +838,7 @@ YAML;
                 'minio_secret_key' => 'minioadmin',
                 'minio_bucket' => $normalizedName,
                 'minio_console_port' => 9001,
-                'using_docker' => false,
+                AppTypeInterface::CONFIG_USING_DOCKER => false,
             ];
         }
 
@@ -917,7 +918,7 @@ YAML;
             'minio_secret_key' => $secretKey,
             'minio_bucket' => $bucketName,
             'minio_console_port' => $consolePort,
-            'using_docker' => false,
+            AppTypeInterface::CONFIG_USING_DOCKER => false,
         ];
     }
 

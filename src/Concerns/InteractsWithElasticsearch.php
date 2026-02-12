@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
+use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\Support\Filesystem;
 use PhpHive\Cli\Support\Process;
 use RuntimeException;
@@ -333,7 +334,7 @@ trait InteractsWithElasticsearch
             'elasticsearch_port' => 9200,
             'elasticsearch_user' => 'elastic',
             'elasticsearch_password' => $esPassword,
-            'using_docker' => true,
+            AppTypeInterface::CONFIG_USING_DOCKER => true,
         ];
     }
 
@@ -706,7 +707,7 @@ trait InteractsWithElasticsearch
                     'elasticsearch_port' => 9200,
                     'elasticsearch_user' => 'elastic',
                     'elasticsearch_password' => '',
-                    'using_docker' => false,
+                    AppTypeInterface::CONFIG_USING_DOCKER => false,
                 ];
             }
 
@@ -907,7 +908,7 @@ trait InteractsWithElasticsearch
                 'elasticsearch_port' => 9200,
                 'elasticsearch_user' => 'elastic',
                 'elasticsearch_password' => '',
-                'using_docker' => false,
+                AppTypeInterface::CONFIG_USING_DOCKER => false,
             ];
         }
 
@@ -963,7 +964,7 @@ trait InteractsWithElasticsearch
             'elasticsearch_port' => $port,
             'elasticsearch_user' => $user,
             'elasticsearch_password' => $password,
-            'using_docker' => false,
+            AppTypeInterface::CONFIG_USING_DOCKER => false,
         ];
     }
 }

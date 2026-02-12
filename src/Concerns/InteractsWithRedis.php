@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
+use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\Support\Filesystem;
 use RuntimeException;
 
@@ -294,7 +295,7 @@ trait InteractsWithRedis
             'redis_host' => 'localhost',
             'redis_port' => $port,
             'redis_password' => $password,
-            'using_docker' => true,
+            AppTypeInterface::CONFIG_USING_DOCKER => true,
         ];
     }
 
@@ -419,7 +420,7 @@ trait InteractsWithRedis
                     'redis_host' => '127.0.0.1',
                     'redis_port' => 6379,
                     'redis_password' => '',
-                    'using_docker' => false,
+                    AppTypeInterface::CONFIG_USING_DOCKER => false,
                 ];
             }
 
@@ -641,7 +642,7 @@ trait InteractsWithRedis
                 'redis_host' => 'localhost',
                 'redis_port' => 6379,
                 'redis_password' => '',
-                'using_docker' => false,
+                AppTypeInterface::CONFIG_USING_DOCKER => false,
             ];
         }
 
@@ -698,7 +699,7 @@ trait InteractsWithRedis
             'redis_host' => $host,
             'redis_port' => $port,
             'redis_password' => $redisPassword,
-            'using_docker' => false,
+            AppTypeInterface::CONFIG_USING_DOCKER => false,
         ];
     }
 }
