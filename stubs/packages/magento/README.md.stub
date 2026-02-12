@@ -1,0 +1,69 @@
+# {{PACKAGE_NAME}}
+
+{{DESCRIPTION}}
+
+## Module Information
+
+- **Module Name**: {{MODULE_NAME}}
+- **Version**: 1.0.0
+- **Type**: magento2-module
+
+## Installation
+
+This module is part of the monorepo and will be auto-discovered by Magento applications.
+
+### Enable the module
+
+```bash
+php bin/magento module:enable {{MODULE_NAME}}
+php bin/magento setup:upgrade
+php bin/magento cache:flush
+```
+
+### Check module status
+
+```bash
+php bin/magento module:status {{MODULE_NAME}}
+```
+
+## Structure
+
+```
+{{PACKAGE_NAME_NORMALIZED}}/
+├── registration.php          # Module registration file
+├── composer.json            # Composer package definition
+├── etc/
+│   └── module.xml          # Module configuration
+└── README.md               # This file
+```
+
+## Development
+
+To add functionality:
+
+1. **Controllers**: Add in `Controller/`
+2. **Blocks**: Add in `Block/`
+3. **Models**: Add in `Model/`
+4. **Templates**: Add in `view/frontend/templates/`
+5. **Layouts**: Add in `view/frontend/layout/`
+6. **Observers**: Add in `Observer/`
+7. **Plugins**: Add in `Plugin/`
+
+After making changes, run:
+```bash
+php bin/magento setup:upgrade
+php bin/magento cache:flush
+```
+
+## Monorepo Integration
+
+This module is shared across all Magento applications in the monorepo:
+
+- **Location**: `packages/{{PACKAGE_NAME_NORMALIZED}}/`
+- **Accessible by**: All Magento apps in `apps/*/`
+- **No duplication**: Single source of truth
+- **Version control**: Managed alongside the monorepo
+
+## License
+
+MIT

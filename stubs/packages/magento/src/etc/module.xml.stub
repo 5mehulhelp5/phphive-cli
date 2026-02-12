@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * {{PACKAGE_NAME}} Module Configuration
+ *
+ * This file defines the module name and version.
+ * It's required for Magento to recognize and load the module.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="{{MODULE_NAME}}" setup_version="1.0.0">
+        <sequence>
+            <!-- Add module dependencies here if needed -->
+        </sequence>
+    </module>
+</config>

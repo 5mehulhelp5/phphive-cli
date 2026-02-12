@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+
+/**
+ * {{PACKAGE_NAMESPACE}} Routes Configuration
+ *
+ * This file configures the routes for the bundle using annotations.
+ */
+return static function (RoutingConfigurator $routes): void {
+    $routes->import('../../src/Controller/', 'annotation');
+};

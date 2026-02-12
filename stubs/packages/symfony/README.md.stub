@@ -1,0 +1,68 @@
+# {{PACKAGE_NAME}}
+
+{{DESCRIPTION}}
+
+## Installation
+
+This bundle is part of the monorepo and can be used by Symfony applications.
+
+### Enable the Bundle
+
+Add the bundle to `config/bundles.php`:
+
+```php
+return [
+    // ...
+    {{NAMESPACE}}\{{PACKAGE_NAMESPACE}}Bundle::class => ['all' => true],
+];
+```
+
+## Configuration
+
+Create a configuration file at `config/packages/{{PACKAGE_NAME_NORMALIZED}}.yaml`:
+
+```yaml
+{{PACKAGE_NAME_NORMALIZED}}:
+    enabled: true
+```
+
+## Usage
+
+```php
+// Add usage examples here
+```
+
+## Structure
+
+```
+{{PACKAGE_NAME_NORMALIZED}}/
+├── src/
+│   ├── {{PACKAGE_NAMESPACE}}Bundle.php
+│   └── DependencyInjection/
+│       ├── {{PACKAGE_NAMESPACE}}Extension.php
+│       └── Configuration.php
+├── config/
+│   └── services.php
+├── tests/
+├── composer.json
+└── README.md
+```
+
+## Testing
+
+```bash
+composer test
+```
+
+## Monorepo Integration
+
+This bundle is shared across all Symfony applications in the monorepo:
+
+- **Location**: `packages/{{PACKAGE_NAME_NORMALIZED}}/`
+- **Accessible by**: All Symfony apps in `apps/*/`
+- **Type**: symfony-bundle
+- **Version control**: Managed alongside the monorepo
+
+## License
+
+MIT

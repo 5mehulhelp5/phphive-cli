@@ -1,0 +1,17 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use {{NAMESPACE}}\Http\Controllers\SampleController;
+
+/*
+|--------------------------------------------------------------------------
+| {{PACKAGE_NAME}} Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your package.
+|
+*/
+
+Route::prefix('{{PACKAGE_NAME_NORMALIZED}}')->group(function () {
+    Route::get('/', [SampleController::class, 'index'])->name('{{PACKAGE_NAME_NORMALIZED}}.index');
+});

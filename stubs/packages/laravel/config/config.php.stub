@@ -1,0 +1,17 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | {{PACKAGE_NAME}} Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This file contains the configuration options for the {{PACKAGE_NAME}} package.
+    | You can publish this file to your application's config directory using:
+    | php artisan vendor:publish --tag={{PACKAGE_NAME_NORMALIZED}}-config
+    |
+    */
+
+    // Add your configuration options here
+    'enabled' => env('{{PACKAGE_NAME_UPPER}}_ENABLED', true),
+];

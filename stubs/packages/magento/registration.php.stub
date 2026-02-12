@@ -1,0 +1,15 @@
+<?php
+/**
+ * {{PACKAGE_NAME}} Registration
+ *
+ * This file registers the module with Magento ComponentRegistrar.
+ * It will be auto-discovered by Magento when the registration_globlist.php
+ */
+
+use Magento\Framework\Component\ComponentRegistrar;
+
+ComponentRegistrar::register(
+    ComponentRegistrar::MODULE,
+    '{{MODULE_NAME}}',
+    __DIR__
+);

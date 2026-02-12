@@ -1,0 +1,55 @@
+# {{PACKAGE_NAME}}
+
+{{DESCRIPTION}}
+
+## Installation
+
+This package is part of the monorepo and will be auto-discovered by Laravel applications.
+
+### Publish Configuration
+
+```bash
+php artisan vendor:publish --tag={{PACKAGE_NAME_NORMALIZED}}-config
+```
+
+## Usage
+
+```php
+// Add usage examples here
+```
+
+## Configuration
+
+The package configuration can be found in `config/{{PACKAGE_NAME_NORMALIZED}}.php` after publishing.
+
+## Structure
+
+```
+{{PACKAGE_NAME_NORMALIZED}}/
+├── src/
+│   └── {{PACKAGE_NAMESPACE}}ServiceProvider.php
+├── config/
+│   └── {{PACKAGE_NAME_NORMALIZED}}.php
+├── tests/
+├── composer.json
+└── README.md
+```
+
+## Testing
+
+```bash
+composer test
+```
+
+## Monorepo Integration
+
+This package is shared across all Laravel applications in the monorepo:
+
+- **Location**: `packages/{{PACKAGE_NAME_NORMALIZED}}/`
+- **Accessible by**: All Laravel apps in `apps/*/`
+- **Auto-discovery**: Automatically registered via Laravel package discovery
+- **Version control**: Managed alongside the monorepo
+
+## License
+
+MIT

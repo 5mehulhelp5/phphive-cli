@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controller;
+
+/**
+ * Sample Controller
+ *
+ * This is a sample controller to demonstrate the package structure.
+ * You can modify or remove this file as needed.
+ */
+class SampleController extends Controller
+{
+    /**
+     * Display a sample response
+     *
+     * @return JsonResponse
+     */
+    public function index(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => '{{PACKAGE_NAME}} is working!',
+            'package' => '{{COMPOSER_PACKAGE_NAME}}',
+            'version' => '1.0.0',
+        ]);
+    }
+}

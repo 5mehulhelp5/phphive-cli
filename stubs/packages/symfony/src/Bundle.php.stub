@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+use Symfony\Component\HttpKernel\Bundle\Bundle as BaseBundle;
+
+/**
+ * {{PACKAGE_NAMESPACE}} Bundle
+ *
+ * This bundle provides {{DESCRIPTION}}
+ */
+class {{PACKAGE_NAMESPACE}}Bundle extends BaseBundle
+{
+    /**
+     * Get the bundle path
+     *
+     * @return string
+     */
+    public function getPath(): string
+    {
+        return \dirname(__DIR__);
+    }
+}

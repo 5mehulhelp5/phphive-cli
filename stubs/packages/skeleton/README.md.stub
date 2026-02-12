@@ -1,0 +1,27 @@
+# {{PACKAGE_NAME}}
+
+{{DESCRIPTION}}
+
+## Installation
+
+This package is part of the monorepo.
+
+```bash
+composer require {{COMPOSER_PACKAGE_NAME}}
+```
+
+## Usage
+
+```php
+// Add usage examples here
+```
+
+## Testing
+
+```bash
+composer test
+```
+
+## License
+
+MIT

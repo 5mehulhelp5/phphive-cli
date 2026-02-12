@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\DependencyInjection;
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\Extension as BaseExtension;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+
+/**
+ * {{PACKAGE_NAMESPACE}} Extension
+ *
+ * This extension loads the bundle's service configuration.
+ */
+class {{PACKAGE_NAMESPACE}}Extension extends BaseExtension
+{
+    /**
+     * Load the bundle's service configuration
+     *
+     * @param array<mixed> $configs
+     * @param ContainerBuilder $container
+     * @return void
+     * @throws \Exception
+     */
+    public function load(array $configs, ContainerBuilder $container): void
+    {
+        $loader = new PhpFileLoader(
+            $container,
+            new FileLocator(__DIR__ . '/../../config')
+        );
+
+        // Load services configuration
+        // $loader->load('services.php');
+
+        // Process configuration
+        // $configuration = new Configuration();
+        // $config = $this->processConfiguration($configuration, $configs);
+
+        // Set parameters
+        // $container->setParameter('{{PACKAGE_NAME_NORMALIZED}}.enabled', $config['enabled']);
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "{{PACKAGE_NAMESPACE}}",
+    "alias": "{{PACKAGE_NAME_NORMALIZED}}",
+    "description": "{{DESCRIPTION}}",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "{{NAMESPACE}}\\Providers\\{{PACKAGE_NAMESPACE}}ServiceProvider"
+    ],
+    "files": []
+}

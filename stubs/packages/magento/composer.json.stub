@@ -1,0 +1,30 @@
+{
+    "name": "{{COMPOSER_PACKAGE_NAME}}",
+    "description": "{{DESCRIPTION}}",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "{{AUTHOR_NAME}}",
+            "email": "{{AUTHOR_EMAIL}}"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "magento/framework": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "{{NAMESPACE}}\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "magento/composer-dependency-version-audit-plugin": true
+        }
+    }
+}

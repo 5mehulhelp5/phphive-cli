@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Providers;
+
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+
+/**
+ * {{PACKAGE_NAMESPACE}} Service Provider
+ *
+ * This service provider registers the package's services, publishes configuration,
+ * and loads routes, views, and translations.
+ */
+class {{PACKAGE_NAMESPACE}}ServiceProvider extends BaseServiceProvider
+{
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+        // Merge package configuration
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/{{PACKAGE_NAME_NORMALIZED}}.php',
+            '{{PACKAGE_NAME_NORMALIZED}}'
+        );
+
+        // Register package services
+        // $this->app->singleton(SomeService::class, function ($app) {
+        //     return new SomeService();
+        // });
+    }
+
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot(): void
+    {
+        // Publish configuration
+        $this->publishes([
+            __DIR__ . '/../config/{{PACKAGE_NAME_NORMALIZED}}.php' => config_path('{{PACKAGE_NAME_NORMALIZED}}.php'),
+        ], '{{PACKAGE_NAME_NORMALIZED}}-config');
+
+        // Load routes
+        // $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+
+        // Load views
+        // $this->loadViewsFrom(__DIR__ . '/../resources/views', '{{PACKAGE_NAME_NORMALIZED}}');
+
+        // Publish views
+        // $this->publishes([
+        //     __DIR__ . '/../resources/views' => resource_path('views/vendor/{{PACKAGE_NAME_NORMALIZED}}'),
+        // ], '{{PACKAGE_NAME_NORMALIZED}}-views');
+
+        // Load migrations
+        // $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
+        // Load translations
+        // $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', '{{PACKAGE_NAME_NORMALIZED}}');
+
+        // Publish translations
+        // $this->publishes([
+        //     __DIR__ . '/../resources/lang' => $this->app->langPath('vendor/{{PACKAGE_NAME_NORMALIZED}}'),
+        // ], '{{PACKAGE_NAME_NORMALIZED}}-translations');
+    }
+}
