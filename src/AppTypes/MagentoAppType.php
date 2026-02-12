@@ -6,7 +6,6 @@ namespace PhpHive\Cli\AppTypes;
 
 use function Laravel\Prompts\note;
 
-use Override;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -377,13 +376,10 @@ class MagentoAppType extends AbstractAppType
      * with the specified version. The command creates a new Magento project
      * in the current directory.
      *
-     * Command format:
-     * ```bash
-     * composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition:{version} .
-     * ```
+     * Command format includes inline authentication using COMPOSER_AUTH environment variable.
      *
      * Note: Requires Magento authentication keys from https://marketplace.magento.com/
-     * Authentication is configured via auth.json file before running create-project.
+     * Authentication is passed via COMPOSER_AUTH environment variable.
      *
      * @param  array<string, mixed> $config Configuration from collectConfiguration()
      * @return string               The Composer command to execute
@@ -393,9 +389,22 @@ class MagentoAppType extends AbstractAppType
         // Extract Magento version from config, default to version 2.4.7
         $version = $config['magento_version'] ?? '2.4.7';
 
-        // Just return the create-project command
-        // Authentication will be handled in getPreInstallCommands()
-        return "composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition:{$version} .";
+        // Extract authentication keys
+        $publicKey = $config['magento_public_key'] ?? '';
+        $privateKey = $config['magento_private_key'] ?? '';
+
+        // Create auth JSON for COMPOSER_AUTH environment variable
+        $authJson = json_encode([
+            'http-basic' => [
+                'repo.magento.com' => [
+                    'username' => $publicKey,
+                    'password' => $privateKey,
+                ],
+            ],
+        ], JSON_UNESCAPED_SLASHES);
+
+        // Return command with COMPOSER_AUTH environment variable
+        return "COMPOSER_AUTH='{$authJson}' composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition:{$version} .";
     }
 
     /**
@@ -408,29 +417,6 @@ class MagentoAppType extends AbstractAppType
      * @param  array<string, mixed> $config Configuration from collectConfiguration()
      * @return array<string>        Array of shell commands to execute sequentially
      */
-    #[Override]
-    public function getPreInstallCommands(array $config): array
-    {
-        // Extract authentication keys
-        $publicKey = $config['magento_public_key'] ?? '';
-        $privateKey = $config['magento_private_key'] ?? '';
-
-        // Create auth.json file with Magento credentials
-        // This is more reliable than using composer config command
-        $authJson = json_encode([
-            'http-basic' => [
-                'repo.magento.com' => [
-                    'username' => $publicKey,
-                    'password' => $privateKey,
-                ],
-            ],
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-        // Return command to create auth.json file
-        return [
-            "echo '{$authJson}' > auth.json",
-        ];
-    }
 
     /**
      * Get post-installation commands to execute.
