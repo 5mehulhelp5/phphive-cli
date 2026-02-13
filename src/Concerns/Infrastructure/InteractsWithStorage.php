@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns\Infrastructure;
 
+use Illuminate\Support\Str;
 use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\DTOs\Infrastructure\StorageConfig;
 use PhpHive\Cli\Enums\StorageDriver;
@@ -209,7 +210,7 @@ trait InteractsWithStorage
         );
 
         // Sanitize app name for bucket naming (lowercase, alphanumeric + hyphens)
-        $defaultBucket = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
+        $defaultBucket = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
 
         // Prompt for bucket name
         $bucket = $this->text(
@@ -302,7 +303,7 @@ trait InteractsWithStorage
         );
 
         // Sanitize app name for bucket naming (lowercase, replace special chars with hyphens)
-        $defaultBucket = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
+        $defaultBucket = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
 
         // Prompt for bucket name with sanitized default
         $bucket = $this->text('Default bucket name', default: $defaultBucket, required: true);
@@ -369,7 +370,7 @@ trait InteractsWithStorage
             : $this->text('Secret key', required: true);  // Use user-provided key
 
         // Sanitize app name for bucket naming
-        $defaultBucket = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
+        $defaultBucket = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
 
         // Prompt for bucket name
         // In non-interactive mode, automatically uses default

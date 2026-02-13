@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns\Infrastructure;
 
+use Illuminate\Support\Str;
 use PhpHive\Cli\Contracts\AppTypeInterface;
 use PhpHive\Cli\DTOs\Infrastructure\DatabaseConfig;
 use PhpHive\Cli\Enums\DatabaseType;
@@ -246,7 +247,7 @@ trait InteractsWithDatabase
 
         // Normalize app name for use as database name (lowercase, alphanumeric + underscores)
         // Example: "My App!" becomes "my_app"
-        $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $appName) ?? $appName);
+        $normalizedName = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '_', $appName) ?? $appName);
 
         // Prompt for database port with availability checking
         // MySQL: 3306, PostgreSQL: 5432, MariaDB: 3306
@@ -515,7 +516,7 @@ trait InteractsWithDatabase
 
         // Normalize app name for use as database name (lowercase, alphanumeric + underscores)
         // Example: "My App!" becomes "my_app"
-        $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $appName) ?? $appName);
+        $normalizedName = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '_', $appName) ?? $appName);
 
         // Prompt for database name (defaults to normalized app name)
         $dbName = $this->text(
@@ -625,7 +626,7 @@ trait InteractsWithDatabase
     {
         // Normalize app name for use as database name (lowercase, alphanumeric + underscores)
         // Example: "My App!" becomes "my_app"
-        $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $appName) ?? $appName);
+        $normalizedName = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '_', $appName) ?? $appName);
 
         // Inform user about manual configuration requirements
         // User must have an existing database with proper credentials

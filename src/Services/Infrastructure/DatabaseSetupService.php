@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Services\Infrastructure;
 
+use Illuminate\Support\Str;
 use PhpHive\Cli\DTOs\Infrastructure\DatabaseConfig;
 use PhpHive\Cli\Enums\DatabaseType;
 use PhpHive\Cli\Support\Docker;
@@ -137,7 +138,7 @@ final readonly class DatabaseSetupService
 
         // Normalize app name for container naming
         $appName = basename($appPath);
-        $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
+        $normalizedName = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
 
         // Prepare template variables
         $variables = [

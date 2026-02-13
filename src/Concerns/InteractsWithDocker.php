@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
+use Illuminate\Support\Str;
 use PhpHive\Cli\Support\Process;
 
 /**
@@ -259,7 +260,7 @@ trait InteractsWithDocker
      */
     protected function detectOS(): string
     {
-        $os = strtolower(PHP_OS);
+        $os = Str::lower(PHP_OS);
 
         if (str_contains($os, 'darwin')) {
             return 'macos';

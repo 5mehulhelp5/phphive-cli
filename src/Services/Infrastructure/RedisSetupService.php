@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Services\Infrastructure;
 
+use Illuminate\Support\Str;
 use PhpHive\Cli\DTOs\Infrastructure\RedisConfig;
 use PhpHive\Cli\Support\Process;
 use Pixielity\StubGenerator\Exceptions\StubNotFoundException;
@@ -199,7 +200,7 @@ final readonly class RedisSetupService
             Stub::setBasePath(dirname(__DIR__, 3) . '/stubs');
 
             // Normalize app name for container/volume names
-            $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
+            $normalizedName = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '-', $appName) ?? $appName);
 
             // Create stub with replacements
             Stub::create('docker/redis.yml', [

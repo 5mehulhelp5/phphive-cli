@@ -44,17 +44,6 @@ class AbstractPackageTypeTest extends TestCase
             {
                 return 'Test package type';
             }
-
-            // Expose protected methods for testing
-            public function publicConvertToNamespace(string $name): string
-            {
-                return $this->convertToNamespace($name);
-            }
-
-            public function publicGenerateComposerPackageName(string $name): string
-            {
-                return $this->generateComposerPackageName($name);
-            }
         };
     }
 
@@ -130,63 +119,63 @@ class AbstractPackageTypeTest extends TestCase
     }
 
     /**
-     * Test convertToNamespace converts kebab-case to PascalCase.
+     * Test prepareVariables converts kebab-case to PascalCase namespace.
      */
-    public function test_convert_to_namespace_converts_kebab_case_to_pascal_case(): void
+    public function test_prepare_variables_converts_kebab_case_to_pascal_case(): void
     {
-        $namespace = $this->packageType->publicConvertToNamespace('test-package');
+        $variables = $this->packageType->prepareVariables('test-package', 'Test description');
 
-        $this->assertSame('TestPackage', $namespace);
+        $this->assertSame('TestPackage', $variables['package_namespace']);
     }
 
     /**
-     * Test convertToNamespace converts snake_case to PascalCase.
+     * Test prepareVariables converts snake_case to PascalCase namespace.
      */
-    public function test_convert_to_namespace_converts_snake_case_to_pascal_case(): void
+    public function test_prepare_variables_converts_snake_case_to_pascal_case(): void
     {
-        $namespace = $this->packageType->publicConvertToNamespace('test_package');
+        $variables = $this->packageType->prepareVariables('test_package', 'Test description');
 
-        $this->assertSame('TestPackage', $namespace);
+        $this->assertSame('TestPackage', $variables['package_namespace']);
     }
 
     /**
-     * Test convertToNamespace handles mixed separators.
+     * Test prepareVariables handles mixed separators in namespace.
      */
-    public function test_convert_to_namespace_handles_mixed_separators(): void
+    public function test_prepare_variables_handles_mixed_separators(): void
     {
-        $namespace = $this->packageType->publicConvertToNamespace('test-package_name');
+        $variables = $this->packageType->prepareVariables('test-package_name', 'Test description');
 
-        $this->assertSame('TestPackageName', $namespace);
+        $this->assertSame('TestPackageName', $variables['package_namespace']);
     }
 
     /**
-     * Test convertToNamespace handles single word.
+     * Test prepareVariables handles single word namespace.
      */
-    public function test_convert_to_namespace_handles_single_word(): void
+    public function test_prepare_variables_handles_single_word(): void
     {
-        $namespace = $this->packageType->publicConvertToNamespace('package');
+        $variables = $this->packageType->prepareVariables('package', 'Test description');
 
-        $this->assertSame('Package', $namespace);
+        $this->assertSame('Package', $variables['package_namespace']);
     }
 
     /**
-     * Test generateComposerPackageName adds vendor prefix.
+     * Test prepareVariables adds vendor prefix to composer package name.
      */
-    public function test_generate_composer_package_name_adds_vendor_prefix(): void
+    public function test_prepare_variables_adds_vendor_prefix(): void
     {
-        $packageName = $this->packageType->publicGenerateComposerPackageName('test-package');
+        $variables = $this->packageType->prepareVariables('test-package', 'Test description');
 
-        $this->assertSame('phphive/test-package', $packageName);
+        $this->assertSame('phphive/test-package', $variables['composer_package_name']);
     }
 
     /**
-     * Test generateComposerPackageName converts to lowercase.
+     * Test prepareVariables converts composer package name to lowercase.
      */
-    public function test_generate_composer_package_name_converts_to_lowercase(): void
+    public function test_prepare_variables_converts_composer_name_to_lowercase(): void
     {
-        $packageName = $this->packageType->publicGenerateComposerPackageName('TestPackage');
+        $variables = $this->packageType->prepareVariables('TestPackage', 'Test description');
 
-        $this->assertSame('phphive/testpackage', $packageName);
+        $this->assertSame('phphive/testpackage', $variables['composer_package_name']);
     }
 
     /**
