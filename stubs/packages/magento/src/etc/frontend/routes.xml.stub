@@ -7,9 +7,9 @@
  * The module will be accessible at: /{{PACKAGE_NAME_NORMALIZED}}/*
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../vendor/magento/framework/App/etc/routes.xsd">
     <router id="standard">
-        <route id="{{PACKAGE_NAME_NORMALIZED}}" frontName="{{PACKAGE_NAME_NORMALIZED}}">
+        <route id="{{ROUTE_ID}}" frontName="{{PACKAGE_NAME_NORMALIZED}}">
             <module name="{{MODULE_NAME}}" />
         </route>
     </router>

@@ -13,11 +13,17 @@
     "require": {
         "php": "^8.4|^8.5",
         "illuminate/support": "^12.0",
-        "illuminate/routing": "^10.0|^11.0"
+        "illuminate/routing": "^12.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^8.0|^9.0",
-        "phpunit/phpunit": "^10.0"
+        "driftingly/rector-laravel": "^2.1",
+        "rector/rector": "^2.3",
+        "larastan/larastan": "^3.9",
+        "laravel/pint": "^1.27",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^11.0"
     },
     "autoload": {
         "psr-4": {
