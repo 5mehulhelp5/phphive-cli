@@ -5,6 +5,79 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.20] - 2026-02-13
+
+### Added
+
+- **Multi-Backend Storage Support**: Refactored MinIO-specific code to support multiple storage backends
+  - `StorageDriver` enum for MinIO and Amazon S3
+  - `StorageConfig` DTO supporting both MinIO and S3 configurations
+  - `StorageSetupService` with driver-specific setup logic
+  - `InteractsWithStorage` trait with driver selection and S3 prompts
+  - Backward compatibility with legacy `minio_*` configuration keys
+
+- **Comprehensive Infrastructure Services**: Complete refactoring of infrastructure setup
+  - `DatabaseSetupService`, `MySQLService`, `DockerComposeGenerator` for database management
+  - `RedisSetupService` for Redis cache/session setup
+  - `QueueSetupService` for queue systems (Redis, RabbitMQ, SQS)
+  - `SearchSetupService` for Elasticsearch/Meilisearch/OpenSearch
+  - All services use dependency injection and follow single responsibility principle
+
+- **Type-Safe Configuration with Enums**: Added comprehensive enum classes
+  - `AppType`, `PackageType`, `PhpVersion` for application configuration
+  - `DatabaseType`, `CacheDriver`, `QueueDriver`, `SearchEngine`, `StorageDriver` for infrastructure
+  - `LaravelStarterKit`, `LaravelVersion`, `MagentoEdition`, `MagentoVersion`, `SymfonyVersion` for framework-specific config
+  - All enums include helper methods: `getName()`, `getDescription()`, `choices()`
+
+- **Infrastructure DTOs**: Type-safe, immutable configuration objects
+  - `DatabaseConfig`, `RedisConfig`, `QueueConfig`, `SearchConfig`, `StorageConfig`
+  - Include `toArray()` and `fromArray()` methods for serialization
+  - Improve type safety and reduce configuration errors
+
+- **BaseMakeCommand**: Extracted common Make command functionality
+  - Shared preflight checks and validation
+  - Consistent error display and success messages
+  - Reduced code duplication by ~150 lines
+
+- **Infrastructure Traits with Full Documentation**: Comprehensive docblocks and inline comments
+  - `InteractsWithDatabase` for MySQL/PostgreSQL/MariaDB setup
+  - `InteractsWithRedis` for Redis setup with OS-specific installation guidance
+  - `InteractsWithQueue` for queue systems with backend comparisons
+  - `InteractsWithElasticsearch` for Elasticsearch/OpenSearch with version differences
+  - `InteractsWithMeilisearch` for Meilisearch search engine
+  - `InteractsWithStorage` for MinIO/S3 object storage
+  - Docker-first approach with graceful fallback to local setup
+
+### Changed
+
+- **AppType Organization**: Reorganized into subdirectories with Concerns
+  - Moved Laravel, Magento, Skeleton, Symfony AppTypes to subdirectories
+  - Extracted configuration collection logic into Concerns traits
+  - Each AppType now has its own namespace and Concerns folder
+
+- **Dependency Injection Improvements**: Better service resolution patterns
+  - Added Container dependency to AbstractAppType constructor
+  - Added service accessor methods for all infrastructure services
+  - Use `$this->container->make()` instead of `App::make()` for proper DI
+  - Updated AppTypeFactory to inject Container into AppType instances
+
+- **BaseCommand Enhancements**: Added service accessor helper methods
+  - `preflightChecker()`, `packageTypeFactory()`, `nameSuggestionService()`, `appTypeFactory()`
+  - Replace App::make() calls with helper methods
+  - Improve dependency injection and testability
+
+- **Make Commands Refactoring**: Updated to extend BaseMakeCommand
+  - CreateAppCommand, CreatePackageCommand, MakeWorkspaceCommand
+  - Use AppTypeFactory instance methods instead of static calls
+  - Remove duplicate preflight check and validation logic
+
+### Removed
+
+- **Old File Locations**: Cleaned up after reorganization
+  - Removed old infrastructure traits from root Concerns directory
+  - Removed old AppType files from root directory
+  - Removed NameSuggestionService from Support/ (moved to Services/)
+
 ## [1.0.19] - 2026-02-12
 
 ### Added
@@ -436,7 +509,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Template-Based Workspace Creation**: `make:workspace` now clones from official template repository
-  - Clones from https://github.com/pixielity-co/hive-template
+  - Clones from https://github.com/pixielity-inc/hive-template
   - Includes pre-configured sample app and package
   - Complete monorepo structure with all configuration files
   - Automatic package name updates in package.json and composer.json
@@ -537,7 +610,7 @@ PhpHive CLI v1.0.0 is here! A powerful, production-ready CLI tool for managing P
 - **API Reference** - Documentation for programmatic usage
 
 #### Infrastructure
-- **GitHub Repository** - https://github.com/pixielity-co/phphive-cli
+- **GitHub Repository** - https://github.com/pixielity-inc/phphive-cli
 - **Packagist Package** - https://packagist.org/packages/phphive/cli
 - **Automated Webhook** - GitHub to Packagist integration for automatic updates
 - **CI/CD Ready** - GitHub Actions workflow configuration
@@ -615,7 +688,7 @@ If you were using the previous Mono CLI:
 
 ### Known Issues
 
-None at this time. Please report issues at https://github.com/pixielity-co/phphive-cli/issues
+None at this time. Please report issues at https://github.com/pixielity-inc/phphive-cli/issues
 
 ### Credits
 
@@ -665,7 +738,7 @@ Built with:
 
 ---
 
-[1.0.2]: https://github.com/pixielity-co/phphive-cli/releases/tag/v1.0.2
-[1.0.1]: https://github.com/pixielity-co/phphive-cli/releases/tag/v1.0.1
-[1.0.0]: https://github.com/pixielity-co/phphive-cli/releases/tag/v1.0.0
-[Unreleased]: https://github.com/pixielity-co/phphive-cli/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/pixielity-inc/phphive-cli/releases/tag/v1.0.2
+[1.0.1]: https://github.com/pixielity-inc/phphive-cli/releases/tag/v1.0.1
+[1.0.0]: https://github.com/pixielity-inc/phphive-cli/releases/tag/v1.0.0
+[Unreleased]: https://github.com/pixielity-inc/phphive-cli/compare/v1.0.2...HEAD

@@ -10,8 +10,8 @@
 [![Packagist Version](https://img.shields.io/packagist/v/phphive/cli?style=flat-square&logo=packagist&logoColor=white)](https://packagist.org/packages/phphive/cli)
 [![Downloads](https://img.shields.io/packagist/dt/phphive/cli?style=flat-square&logo=packagist&logoColor=white&label=downloads)](https://packagist.org/packages/phphive/cli)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![CI Status](https://img.shields.io/github/actions/workflow/status/pixielity-co/phphive-cli/ci.yml?branch=main&style=flat-square&logo=github&label=CI)](https://github.com/pixielity-co/phphive-cli/actions)
-[![Tests](https://img.shields.io/badge/tests-58%20passing-success?style=flat-square&logo=phpunit&logoColor=white)](https://github.com/pixielity-co/phphive-cli/actions)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/pixielity-inc/phphive-cli/ci.yml?branch=main&style=flat-square&logo=github&label=CI)](https://github.com/pixielity-inc/phphive-cli/actions)
+[![Tests](https://img.shields.io/badge/tests-58%20passing-success?style=flat-square&logo=phpunit&logoColor=white)](https://github.com/pixielity-inc/phphive-cli/actions)
 
 [Features](#-features) •
 [Installation](#-installation) •
@@ -275,7 +275,7 @@ Built with:
 ## 📞 Support
 
 - **Documentation**: [GitHub Docs](./docs)
-- **Issues**: [GitHub Issues](https://github.com/pixielity-co/phphive-cli/issues)
+- **Issues**: [GitHub Issues](https://github.com/pixielity-inc/phphive-cli/issues)
 - **Packagist**: [phphive/cli](https://packagist.org/packages/phphive/cli)
 
 ---

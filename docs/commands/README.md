@@ -999,4 +999,4 @@ hive cleanup                     # Deep clean
 
 ---
 
-**Need more help?** Check the [Getting Started Guide](../getting-started/README.md) or [open an issue](https://github.com/pixielity-co/phphive-cli/issues).
+**Need more help?** Check the [Getting Started Guide](../getting-started/README.md) or [open an issue](https://github.com/pixielity-inc/phphive-cli/issues).

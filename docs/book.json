@@ -24,10 +24,10 @@
   ],
   "pluginsConfig": {
     "github": {
-      "url": "https://github.com/pixielity-co/phphive-cli"
+      "url": "https://github.com/pixielity-inc/phphive-cli"
     },
     "edit-link": {
-      "base": "https://github.com/pixielity-co/phphive-cli/edit/main/docs",
+      "base": "https://github.com/pixielity-inc/phphive-cli/edit/main/docs",
       "label": "Edit This Page"
     },
     "prism": {
@@ -47,9 +47,9 @@
   },
   "links": {
     "sidebar": {
-      "GitHub": "https://github.com/pixielity-co/phphive-cli",
+      "GitHub": "https://github.com/pixielity-inc/phphive-cli",
       "Packagist": "https://packagist.org/packages/phphive/cli",
-      "Issues": "https://github.com/pixielity-co/phphive-cli/issues"
+      "Issues": "https://github.com/pixielity-inc/phphive-cli/issues"
     }
   },
   "variables": {

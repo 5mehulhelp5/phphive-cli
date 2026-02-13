@@ -154,6 +154,6 @@
 
 * [Changelog](../CHANGELOG.md)
 * [License](../LICENSE)
-* [GitHub Repository](https://github.com/pixielity-co/phphive-cli)
+* [GitHub Repository](https://github.com/pixielity-inc/phphive-cli)
 * [Packagist Package](https://packagist.org/packages/phphive/cli)
-* [Issue Tracker](https://github.com/pixielity-co/phphive-cli/issues)
+* [Issue Tracker](https://github.com/pixielity-inc/phphive-cli/issues)

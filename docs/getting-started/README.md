@@ -90,7 +90,7 @@ You'll be prompted for:
 - **Workspace name** - e.g., `my-monorepo`
 
 The command will:
-- Clone from https://github.com/pixielity-co/hive-template
+- Clone from https://github.com/pixielity-inc/hive-template
 - Set up complete monorepo structure
 - Include sample app and package
 - Initialize fresh Git repository
@@ -190,4 +190,4 @@ Now that you're set up, explore these topics:
 
 ---
 
-**Questions?** Check the [FAQ](./faq.md) or [open an issue](https://github.com/pixielity-co/phphive-cli/issues).
+**Questions?** Check the [FAQ](./faq.md) or [open an issue](https://github.com/pixielity-inc/phphive-cli/issues).

@@ -69,8 +69,8 @@ Programmatic usage and extension points.
 
 ## 💡 Need Help?
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/pixielity-co/phphive-cli/issues)
-- **Discussions**: [Ask questions and share ideas](https://github.com/pixielity-co/phphive-cli/discussions)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/pixielity-inc/phphive-cli/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/pixielity-inc/phphive-cli/discussions)
 - **Packagist**: [View package details](https://packagist.org/packages/phphive/cli)
 
 ## 📖 About This Documentation

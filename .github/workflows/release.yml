@@ -229,7 +229,7 @@ jobs:
 
             - [Documentation](https://pixielity.gitbook.io/phphive-cli/)
             - [Packagist Package](https://packagist.org/packages/phphive/cli)
-            - [Full Changelog](https://github.com/pixielity-co/phphive-cli/blob/main/CHANGELOG.md)
+            - [Full Changelog](https://github.com/pixielity-inc/phphive-cli/blob/main/CHANGELOG.md)
           draft: false
           prerelease: false
 
@@ -243,7 +243,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag**: v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Release URL**: https://github.com/pixielity-co/phphive-cli/releases/tag/v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL**: https://github.com/pixielity-inc/phphive-cli/releases/tag/v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Summary (Tag Exists)
         if: steps.check_tag.outputs.exists == 'true'
