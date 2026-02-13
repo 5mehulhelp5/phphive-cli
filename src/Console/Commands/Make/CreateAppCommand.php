@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace PhpHive\Cli\Console\Commands\Make;
 
 use Exception;
-
-use function is_dir;
-
 use Override;
-use PhpHive\Cli\Console\Commands\BaseCommand;
 use PhpHive\Cli\Contracts\AppTypeInterface;
+use PhpHive\Cli\Enums\AppType;
+use PhpHive\Cli\Enums\DatabaseType;
 use PhpHive\Cli\Factories\AppTypeFactory;
+use PhpHive\Cli\Services\NameSuggestionService;
 use PhpHive\Cli\Support\Filesystem;
-use PhpHive\Cli\Support\NameSuggestionService;
-use PhpHive\Cli\Support\PreflightChecker;
-use PhpHive\Cli\Support\PreflightResult;
+use Pixielity\StubGenerator\Exceptions\StubNotFoundException;
+use Pixielity\StubGenerator\Facades\Stub;
 
 use function str_replace;
 
@@ -87,7 +85,7 @@ use Symfony\Component\Process\Process;
     description: 'Create a new application',
     aliases: ['create:app', 'new:app'],
 )]
-final class CreateAppCommand extends BaseCommand
+final class CreateAppCommand extends BaseMakeCommand
 {
     /**
      * Configure the command options and arguments.
@@ -308,6 +306,18 @@ final class CreateAppCommand extends BaseCommand
                 InputOption::VALUE_NONE,
                 'Do not use Docker for database',
             )
+            ->addOption(
+                'quiet',
+                'q',
+                InputOption::VALUE_NONE,
+                'Minimal output (errors only, no spinners) - for CI/CD',
+            )
+            ->addOption(
+                'json',
+                'j',
+                InputOption::VALUE_NONE,
+                'Output result as JSON - for programmatic usage',
+            )
             ->setHelp(
                 <<<'HELP'
                 The <info>create:app</info> command scaffolds a new PHP application.
@@ -364,21 +374,30 @@ final class CreateAppCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // Display intro banner
-        $this->intro('Application Creation');
+        $isQuiet = $input->getOption('quiet') === true;
+        $isJson = $input->getOption('json') === true;
+        $isVerbose = $input->getOption('verbose') === true;
 
+        // Display intro banner (skip in quiet/json mode)
         // Step 1: Run preflight checks
-        $this->info('Running environment checks...');
-        $preflightResult = $this->runPreflightChecks();
+        if (! $isQuiet && ! $isJson) {
+            $this->intro('Application Creation');
+            $this->info('Running environment checks...');
+        }
+        $preflightResult = $this->runPreflightChecks($isQuiet, $isJson);
 
         if ($preflightResult->failed()) {
+            $this->displayPreflightErrors($preflightResult, $isQuiet, $isJson);
+
             return Command::FAILURE;
         }
 
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
 
         // Step 2: Get and validate application name with smart suggestions
-        $name = $this->getValidatedAppName($input);
+        $name = $this->getValidatedAppName($input, $isQuiet, $isJson);
 
         // Step 3: APP TYPE SELECTION
         $typeOption = $input->getOption('type');
@@ -386,9 +405,18 @@ final class CreateAppCommand extends BaseCommand
             $appTypeId = $typeOption;
 
             // Validate the provided app type
-            if (! AppTypeFactory::isValid($appTypeId)) {
-                $this->error("Invalid app type: {$appTypeId}");
-                $this->line('Available types: ' . implode(', ', AppTypeFactory::getIdentifiers()));
+            if (! $this->appTypeFactory()->isValid($appTypeId)) {
+                $errorMsg = "Invalid app type: {$appTypeId}";
+                if ($isJson) {
+                    $this->outputJson([
+                        'success' => false,
+                        'error' => $errorMsg,
+                        'available_types' => $this->appTypeFactory()->getIdentifiers(),
+                    ]);
+                } else {
+                    $this->error($errorMsg);
+                    $this->line('Available types: ' . implode(', ', $this->appTypeFactory()->getIdentifiers()));
+                }
 
                 return Command::FAILURE;
             }
@@ -396,92 +424,109 @@ final class CreateAppCommand extends BaseCommand
             // Prompt user to select app type
             $appTypeId = $this->select(
                 label: 'Select application type',
-                options: AppTypeFactory::getChoices()
+                options: AppTypeFactory::choices()
             );
         }
 
         // Create the app type instance
-        $appType = AppTypeFactory::create($appTypeId);
-        $this->comment("Selected: {$appType->getName()}");
-
+        $appType = $this->appTypeFactory()->create($appTypeId);
         // Step 4: CONFIGURATION COLLECTION
-        $this->line('');
-        $this->comment('Configuration:');
+        if (! $isQuiet && ! $isJson) {
+            $this->comment("Selected: {$appType->getName()}");
+            $this->line('');
+            $this->comment('Configuration:');
+        }
+
+        // Set name in input so app types don't prompt for it
+        // (they should read from input argument if available)
+        $input->setArgument('name', $name);
+
+        // Set description in input if provided via option
+        $descriptionOption = $input->getOption('description');
+        if ($descriptionOption !== null && $descriptionOption !== '') {
+            $input->setOption('description', $descriptionOption);
+        }
 
         $config = $appType->collectConfiguration($input, $output);
 
-        // Set name and description from command arguments/options
+        // Ensure name is set from command argument (override any prompts)
         $config[AppTypeInterface::CONFIG_NAME] = $name;
 
-        // Set description if not already set by collectConfiguration (from --description option)
-        if (! isset($config[AppTypeInterface::CONFIG_DESCRIPTION]) || $config[AppTypeInterface::CONFIG_DESCRIPTION] === '') {
+        // Set description from option if provided, otherwise use collected value or default
+        if ($descriptionOption !== null && $descriptionOption !== '') {
+            $config[AppTypeInterface::CONFIG_DESCRIPTION] = $descriptionOption;
+        } elseif (! isset($config[AppTypeInterface::CONFIG_DESCRIPTION]) || $config[AppTypeInterface::CONFIG_DESCRIPTION] === '') {
             $config[AppTypeInterface::CONFIG_DESCRIPTION] = "A {$appType->getName()} application";
         }
 
         // Step 5: Execute application creation with progress feedback
         $root = $this->getMonorepoRoot();
         $appPath = "{$root}/apps/{$name}";
+        $appsDir = "{$root}/apps";
         $filesystem = $this->filesystem();
 
         $steps = [
-            'Creating application structure' => fn (): bool => $this->createAppStructure($appPath, $filesystem),
-            'Running pre-installation setup' => fn (): bool => $this->runPreInstallCommands($appType, $config, $appPath),
-            'Installing application framework' => fn (): bool => $this->runInstallCommand($appType, $config, $appPath),
+            'Installing application framework' => fn (): bool => $this->runInstallCommand($appType, $config, $appsDir, $isVerbose),
+            'Setting up infrastructure' => fn (): bool => $this->setupInfrastructure($appType, $appPath, $name, $isVerbose),
             'Processing configuration files' => fn () => $this->processStubs($appType, $config, $appPath, $filesystem),
-            'Running post-installation tasks' => fn (): bool => $this->runPostInstallCommands($appType, $config, $appPath),
+            'Running additional setup tasks' => fn (): bool => $this->runPostInstallCommands($appType, $config, $appPath, $isVerbose),
         ];
 
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
+
+        $startTime = microtime(true);
         foreach ($steps as $message => $step) {
-            $result = $this->spin($step, "{$message}...");
+            $stepStartTime = microtime(true);
+
+            if ($isQuiet || $isJson) {
+                // No spinner in quiet/json mode
+                $result = $step();
+            } else {
+                $result = $this->spin($step, "{$message}...");
+            }
 
             if ($result === false) {
+                if ($isJson) {
+                    $this->outputJson([
+                        'success' => false,
+                        'error' => "Failed: {$message}",
+                        'app_name' => $name,
+                        'app_type' => $appType->getName(),
+                    ]);
+                }
+
                 return Command::FAILURE;
             }
 
-            $this->comment("✓ {$message} complete");
-        }
+            $stepDuration = microtime(true) - $stepStartTime;
 
-        // Step 6: Display success summary
-        $this->line('');
-        $this->outro("🎉 Application '{$name}' created successfully!");
-        $this->line('');
-        $this->comment('Next steps:');
-        $this->line("  1. cd apps/{$name}");
-        $this->line('  2. Review the generated files');
-        $this->line("  3. hive dev --workspace={$name}");
-
-        return Command::SUCCESS;
-    }
-
-    /**
-     * Run preflight checks to validate environment.
-     */
-    private function runPreflightChecks(): PreflightResult
-    {
-        $preflightChecker = new PreflightChecker($this->process());
-        $preflightResult = $preflightChecker->check();
-
-        // Display check results
-        foreach ($preflightResult->checks as $checkName => $checkResult) {
-            if ($checkResult['passed']) {
-                $this->comment("✓ {$checkName}: {$checkResult['message']}");
-            } else {
-                $this->error("✗ {$checkName}: {$checkResult['message']}");
-
-                if (isset($checkResult['fix'])) {
-                    $this->line('');
-                    $this->note($checkResult['fix'], 'Suggested fix');
-                }
+            if (! $isQuiet && ! $isJson) {
+                $this->comment("✓ {$message} complete");
+            } elseif ($isVerbose && ! $isJson) {
+                $this->comment(sprintf('✓ %s complete (%.2fs)', $message, $stepDuration));
             }
         }
+        $totalDuration = microtime(true) - $startTime;
 
-        if ($preflightResult->passed) {
-            $this->line('');
-            $this->info('✓ All checks passed');
-        }
+        // Step 6: Display success summary
+        $this->displaySuccessMessage(
+            'application',
+            $name,
+            $appPath,
+            $totalDuration,
+            [
+                "cd apps/{$name}",
+                'Review the generated files',
+                "hive dev --workspace={$name}",
+            ],
+            $isQuiet,
+            $isJson,
+            $isVerbose
+        );
 
-        return $preflightResult;
+        return Command::SUCCESS;
     }
 
     /**
@@ -489,14 +534,21 @@ final class CreateAppCommand extends BaseCommand
      *
      * @return string Validated application name
      */
-    private function getValidatedAppName(InputInterface $input): string
+    private function getValidatedAppName(InputInterface $input, bool $isQuiet, bool $isJson): string
     {
         $name = $input->getArgument('name');
 
         // Validate the name format first
-        $validation = $this->validateAppName($name);
+        $validation = $this->validateName($name);
         if ($validation !== null) {
-            $this->error($validation);
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $validation,
+                ]);
+            } else {
+                $this->error($validation);
+            }
             exit(Command::FAILURE);
         }
 
@@ -504,25 +556,32 @@ final class CreateAppCommand extends BaseCommand
         $appPath = "{$root}/apps/{$name}";
 
         // Check if name is available
-        if (! is_dir($appPath)) {
-            $this->info("✓ Application name '{$name}' is available");
-
+        if (! $this->checkDirectoryExists($name, $appPath, 'application', $isQuiet, $isJson)) {
             return $name;
         }
 
         // Name is taken, offer suggestions
-        $this->warning("Application '{$name}' already exists");
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
 
-        $nameSuggestionService = new NameSuggestionService();
+        $nameSuggestionService = NameSuggestionService::make();
         $suggestions = $nameSuggestionService->suggest(
             $name,
             'app',
-            fn (?string $suggestedName): bool => $this->validateAppName($suggestedName) === null && ! is_dir("{$root}/apps/{$suggestedName}")
+            fn (?string $suggestedName): bool => $this->validateName($suggestedName) === null && ! $this->filesystem()->isDirectory("{$root}/apps/{$suggestedName}")
         );
 
         if ($suggestions === []) {
-            $this->error('Could not generate alternative names. Please choose a different name.');
+            $errorMsg = 'Could not generate alternative names. Please choose a different name.';
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
@@ -530,15 +589,17 @@ final class CreateAppCommand extends BaseCommand
         $bestSuggestion = $nameSuggestionService->getBestSuggestion($suggestions);
 
         // Display suggestions with recommendation
-        $this->comment('Suggested names:');
-        $index = 1;
-        foreach ($suggestions as $suggestion) {
-            $marker = $suggestion === $bestSuggestion ? ' (recommended)' : '';
-            $this->line("  {$index}. {$suggestion}{$marker}");
-            $index++;
-        }
+        if (! $isQuiet && ! $isJson) {
+            $this->comment('Suggested names:');
+            $index = 1;
+            foreach ($suggestions as $suggestion) {
+                $marker = $suggestion === $bestSuggestion ? ' (recommended)' : '';
+                $this->line("  {$index}. {$suggestion}{$marker}");
+                $index++;
+            }
 
-        $this->line('');
+            $this->line('');
+        }
 
         // Let user select or enter custom name with best suggestion pre-filled
         $choice = $this->suggest(
@@ -550,117 +611,64 @@ final class CreateAppCommand extends BaseCommand
         );
 
         // Validate the chosen name format
-        $validation = $this->validateAppName($choice);
+        $validation = $this->validateName($choice);
         if ($validation !== null) {
-            $this->error($validation);
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $validation,
+                ]);
+            } else {
+                $this->error($validation);
+            }
             exit(Command::FAILURE);
         }
 
         // Validate the chosen name availability
         $chosenPath = "{$root}/apps/{$choice}";
-        if (is_dir($chosenPath)) {
-            $this->error("Application '{$choice}' also exists. Please try again with a different name.");
+        if ($this->filesystem()->isDirectory($chosenPath)) {
+            $errorMsg = "Application '{$choice}' also exists. Please try again with a different name.";
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
-        $this->info("✓ Application name '{$choice}' is available");
+        if (! $isQuiet && ! $isJson) {
+            $this->info("✓ Application name '{$choice}' is available");
+        }
 
         return $choice;
     }
 
     /**
-     * Validate application name.
-     *
-     * Ensures the application name follows conventions:
-     * - Not empty
-     * - Contains only lowercase letters and hyphens
-     * - Starts with a letter
-     * - No consecutive hyphens
-     * - No numbers (since we generate PHP namespaces from names)
-     *
-     * @param  string|null $name The application name to validate
-     * @return string|null Error message if invalid, null if valid
-     */
-    private function validateAppName(?string $name): ?string
-    {
-        if ($name === null || trim($name) === '') {
-            return 'Application name cannot be empty';
-        }
-
-        if (preg_match('/^[a-z][a-z-]*$/', $name) !== 1) {
-            return 'Application name must start with a letter and contain only lowercase letters and hyphens (no numbers)';
-        }
-
-        if (str_contains($name, '--')) {
-            return 'Application name cannot contain consecutive hyphens';
-        }
-
-        return null;
-    }
-
-    /**
-     * Create application directory structure.
-     *
-     * @param  string     $appPath    Full application path
-     * @param  Filesystem $filesystem Filesystem service
-     * @return bool       True on success
-     */
-    private function createAppStructure(string $appPath, Filesystem $filesystem): bool
-    {
-        try {
-            $filesystem->makeDirectory($appPath, 0755, true);
-
-            return true;
-        } catch (Exception $exception) {
-            $this->error("Failed to create application directory: {$exception->getMessage()}");
-
-            return false;
-        }
-    }
-
-    /**
-     * Run pre-installation commands.
-     *
-     * @param  AppTypeInterface     $appType App type instance
-     * @param  array<string, mixed> $config  Configuration
-     * @param  string               $appPath Application path
-     * @return bool                 True on success
-     */
-    private function runPreInstallCommands(AppTypeInterface $appType, array $config, string $appPath): bool
-    {
-        $preCommands = $appType->getPreInstallCommands($config);
-        if ($preCommands === []) {
-            return true;
-        }
-
-        foreach ($preCommands as $preCommand) {
-            $exitCode = $this->executeCommand($preCommand, $appPath);
-            if ($exitCode !== 0) {
-                $this->error("Pre-installation command failed: {$preCommand}");
-
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Run installation command.
      *
-     * @param  AppTypeInterface     $appType App type instance
-     * @param  array<string, mixed> $config  Configuration
-     * @param  string               $appPath Application path
+     * @param  AppTypeInterface     $appType   App type instance
+     * @param  array<string, mixed> $config    Configuration
+     * @param  string               $appsDir   Apps directory path (parent of app)
+     * @param  bool                 $isVerbose Show verbose output
      * @return bool                 True on success
      */
-    private function runInstallCommand(AppTypeInterface $appType, array $config, string $appPath): bool
+    private function runInstallCommand(AppTypeInterface $appType, array $config, string $appsDir, bool $isVerbose): bool
     {
         $installCommand = $appType->getInstallCommand($config);
         if ($installCommand === '') {
             return true;
         }
 
-        $exitCode = $this->executeCommand($installCommand, $appPath);
+        if ($isVerbose) {
+            $this->comment("  Executing: {$installCommand}");
+        }
+
+        // Run composer create-project from apps directory
+        // This allows it to create the app subdirectory
+        $exitCode = $this->executeCommand($installCommand, $appsDir);
         if ($exitCode !== 0) {
             $this->error('Installation command failed');
 
@@ -671,14 +679,71 @@ final class CreateAppCommand extends BaseCommand
     }
 
     /**
+     * Setup infrastructure (database, Redis, etc.) after app is created.
+     *
+     * @param  AppTypeInterface $appType   App type instance
+     * @param  string           $appPath   Application path
+     * @param  string           $appName   Application name
+     * @param  bool             $isVerbose Show verbose output
+     * @return bool             True on success
+     */
+    private function setupInfrastructure(AppTypeInterface $appType, string $appPath, string $appName, bool $isVerbose): bool
+    {
+        // Call the app type's infrastructure setup method
+        // This will prompt for and configure database, Redis, queues, etc.
+        try {
+            $infraOptions = match ($appType->getName()) {
+                AppType::SYMFONY->getName() => [
+                    'needsDatabase' => true,
+                    'databases' => [DatabaseType::MYSQL, DatabaseType::POSTGRESQL, DatabaseType::SQLITE],
+                    'needsCache' => true,
+                    'needsQueue' => true,
+                    'needsSearch' => false,
+                    'needsStorage' => false,
+                ],
+                AppType::LARAVEL->getName() => [
+                    'needsDatabase' => true,
+                    'databases' => [DatabaseType::MYSQL, DatabaseType::POSTGRESQL, DatabaseType::SQLITE],
+                    'needsCache' => true,
+                    'needsQueue' => true,
+                    'needsSearch' => false,
+                    'needsStorage' => false,
+                ],
+                AppType::MAGENTO->getName() => [
+                    'needsDatabase' => true,
+                    'databases' => [DatabaseType::MYSQL, DatabaseType::MARIADB],
+                    'needsCache' => true,
+                    'needsQueue' => true,
+                    'needsSearch' => true,
+                    'needsStorage' => false,
+                ],
+                default => [],
+            };
+
+            if ($infraOptions !== []) {
+                $appType->setupInfrastructure($appName, $appPath, $infraOptions);
+            }
+
+            return true;
+        } catch (Exception $exception) {
+            if ($isVerbose) {
+                $this->error("Infrastructure setup failed: {$exception->getMessage()}");
+            }
+
+            return false;
+        }
+    }
+
+    /**
      * Run post-installation commands.
      *
-     * @param  AppTypeInterface     $appType App type instance
-     * @param  array<string, mixed> $config  Configuration
-     * @param  string               $appPath Application path
+     * @param  AppTypeInterface     $appType   App type instance
+     * @param  array<string, mixed> $config    Configuration
+     * @param  string               $appPath   Application path
+     * @param  bool                 $isVerbose Show verbose output
      * @return bool                 True on success (warnings don't fail)
      */
-    private function runPostInstallCommands(AppTypeInterface $appType, array $config, string $appPath): bool
+    private function runPostInstallCommands(AppTypeInterface $appType, array $config, string $appPath, bool $isVerbose): bool
     {
         $postCommands = $appType->getPostInstallCommands($config);
         if ($postCommands === []) {
@@ -686,6 +751,10 @@ final class CreateAppCommand extends BaseCommand
         }
 
         foreach ($postCommands as $postCommand) {
+            if ($isVerbose) {
+                $this->comment("  Executing: {$postCommand}");
+            }
+
             $exitCode = $this->executeCommand($postCommand, $appPath);
             if ($exitCode !== 0) {
                 // Log warning but continue
@@ -736,7 +805,7 @@ final class CreateAppCommand extends BaseCommand
         $stubPath = $appType->getStubPath();
 
         // Check if stub directory exists
-        if (! is_dir($stubPath)) {
+        if (! $this->filesystem()->isDirectory($stubPath)) {
             $this->warning("Stub directory not found: {$stubPath}");
 
             return;
@@ -747,6 +816,9 @@ final class CreateAppCommand extends BaseCommand
 
         // Get all stub files recursively
         $stubFiles = $this->getStubFiles($stubPath);
+
+        // Set base path for Stub facade
+        Stub::setBasePath($stubPath);
 
         // Process each stub file
         foreach ($stubFiles as $stubFile) {
@@ -759,33 +831,33 @@ final class CreateAppCommand extends BaseCommand
             // Remove .stub or .append.stub extension for target file
             $targetPath = $isAppendStub ? str_replace('.append.stub', '', $relativePath) : str_replace('.stub', '', $relativePath);
 
-            // Read stub content
-            $content = $filesystem->read($stubFile);
+            try {
+                // Handle append vs replace
+                if ($isAppendStub) {
+                    $targetFile = "{$appPath}/{$targetPath}";
 
-            // Replace placeholders with actual values
-            $processedContent = str_replace(
-                array_keys($variables),
-                array_values($variables),
-                $content
-            );
+                    // Create directory if it doesn't exist
+                    $targetDir = dirname($targetFile);
+                    if (! $this->filesystem()->isDirectory($targetDir)) {
+                        $filesystem->makeDirectory($targetDir, 0755, true);
+                    }
 
-            // Write to target location
-            $targetFile = "{$appPath}/{$targetPath}";
-
-            // Create directory if it doesn't exist
-            $targetDir = dirname($targetFile);
-            if (! is_dir($targetDir)) {
-                $filesystem->makeDirectory($targetDir, 0755, true);
-            }
-
-            // Handle append vs replace
-            if ($isAppendStub && $filesystem->exists($targetFile)) {
-                // Append to existing file
-                $existingContent = $filesystem->read($targetFile);
-                $filesystem->write($targetFile, $existingContent . $processedContent);
-            } else {
-                // Write/overwrite the file
-                $filesystem->write($targetFile, $processedContent);
+                    if ($filesystem->exists($targetFile)) {
+                        // Append to existing file
+                        $existingContent = $filesystem->read($targetFile);
+                        $newContent = Stub::create($relativePath, $variables)->render();
+                        $filesystem->write($targetFile, $existingContent . $newContent);
+                    } else {
+                        // File doesn't exist, create it with stub content
+                        Stub::create($relativePath, $variables)->saveTo($appPath, $targetPath);
+                    }
+                } else {
+                    // Write/overwrite the file using Stub facade
+                    Stub::create($relativePath, $variables)->saveTo($appPath, $targetPath);
+                }
+            } catch (StubNotFoundException $e) {
+                $this->error("Stub file not found: {$relativePath}");
+                $this->error($e->getMessage());
             }
         }
     }
@@ -819,7 +891,7 @@ final class CreateAppCommand extends BaseCommand
             $path = "{$directory}/{$item}";
 
             // If it's a directory, recurse into it
-            if (is_dir($path)) {
+            if ($this->filesystem()->isDirectory($path)) {
                 $files = [...$files, ...$this->getStubFiles($path)];
             }
             // If it's a .stub file, add it to the list

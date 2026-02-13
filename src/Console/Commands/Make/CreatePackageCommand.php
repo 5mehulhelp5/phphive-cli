@@ -6,17 +6,13 @@ namespace PhpHive\Cli\Console\Commands\Make;
 
 use Exception;
 use InvalidArgumentException;
-
-use function is_dir;
-
 use Override;
-use PhpHive\Cli\Console\Commands\BaseCommand;
 use PhpHive\Cli\Contracts\PackageTypeInterface;
-use PhpHive\Cli\Factories\PackageTypeFactory;
+use PhpHive\Cli\Enums\PackageType;
+use PhpHive\Cli\Services\NameSuggestionService;
 use PhpHive\Cli\Support\Filesystem;
-use PhpHive\Cli\Support\NameSuggestionService;
-use PhpHive\Cli\Support\PreflightChecker;
-use PhpHive\Cli\Support\PreflightResult;
+use Pixielity\StubGenerator\Exceptions\StubNotFoundException;
+use Pixielity\StubGenerator\Facades\Stub;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -144,7 +140,7 @@ use Symfony\Component\Console\Output\OutputInterface;
     description: 'Create a new package',
     aliases: ['create:package', 'new:package'],
 )]
-final class CreatePackageCommand extends BaseCommand
+final class CreatePackageCommand extends BaseMakeCommand
 {
     /**
      * Configure the command options and arguments.
@@ -173,6 +169,18 @@ final class CreatePackageCommand extends BaseCommand
                 'd',
                 InputOption::VALUE_REQUIRED,
                 'Package description',
+            )
+            ->addOption(
+                'quiet',
+                'q',
+                InputOption::VALUE_NONE,
+                'Minimal output (errors only, no spinners) - for CI/CD',
+            )
+            ->addOption(
+                'json',
+                'j',
+                InputOption::VALUE_NONE,
+                'Output result as JSON - for programmatic usage',
             );
     }
 
@@ -194,31 +202,40 @@ final class CreatePackageCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // Display intro banner
-        $this->intro('Package Creation');
+        $isQuiet = $input->getOption('quiet') === true;
+        $isJson = $input->getOption('json') === true;
+        $isVerbose = $input->getOption('verbose') === true;
 
+        // Display intro banner (skip in quiet/json mode)
         // Step 1: Run preflight checks
-        $this->info('Running environment checks...');
-        $preflightResult = $this->runPreflightChecks();
+        if (! $isQuiet && ! $isJson) {
+            $this->intro('Package Creation');
+            $this->info('Running environment checks...');
+        }
+        $preflightResult = $this->runPreflightChecks($isQuiet, $isJson);
 
         if ($preflightResult->failed()) {
+            $this->displayPreflightErrors($preflightResult, $isQuiet, $isJson);
+
             return Command::FAILURE;
         }
 
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
 
         // Step 2: Get and validate package name with smart suggestions
-        $name = $this->getValidatedPackageName($input);
+        $name = $this->getValidatedPackageName($input, $isQuiet, $isJson);
 
         // Step 3: Determine package type (prompt if not provided)
         $type = $input->getOption('type');
-        $packageTypeFactory = new PackageTypeFactory($this->composerService());
+        $packageTypeFactory = $this->packageTypeFactory();
 
         if ($type === null) {
             $type = $this->select(
                 label: 'Select package type',
                 options: $packageTypeFactory->getTypeOptions(),
-                default: 'skeleton'
+                default: PackageType::SKELETON->value
             );
         }
 
@@ -226,14 +243,23 @@ final class CreatePackageCommand extends BaseCommand
         try {
             $packageType = $packageTypeFactory->create($type);
         } catch (InvalidArgumentException $invalidArgumentException) {
-            $this->error($invalidArgumentException->getMessage());
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $invalidArgumentException->getMessage(),
+                ]);
+            } else {
+                $this->error($invalidArgumentException->getMessage());
+            }
 
             return Command::FAILURE;
         }
 
-        $this->line('');
-        $this->comment("Selected: {$packageType->getDisplayName()}");
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+            $this->comment("Selected: {$packageType->getDisplayName()}");
+            $this->line('');
+        }
 
         // Step 4: Execute package creation steps with progress feedback
         $root = $this->getMonorepoRoot();
@@ -242,72 +268,87 @@ final class CreatePackageCommand extends BaseCommand
         $steps = [
             'Checking name availability' => fn (): bool => $this->checkNameAvailability($name, $packagePath),
             'Creating package structure' => fn (): bool => $this->createPackageStructure($packagePath),
-            'Generating configuration files' => fn (): bool => $this->generateConfigFiles($input, $name, $type, $packagePath, $packageType),
+            'Generating configuration files' => fn (): bool => $this->generateConfigFiles($input, $name, $type, $packagePath, $packageType, $isVerbose),
         ];
 
+        $startTime = microtime(true);
         foreach ($steps as $message => $step) {
-            $result = $this->spin($step, "{$message}...");
+            $stepStartTime = microtime(true);
+
+            if ($isQuiet || $isJson) {
+                // No spinner in quiet/json mode
+                $result = $step();
+            } else {
+                $result = $this->spin($step, "{$message}...");
+            }
 
             if ($result === false) {
+                if ($isJson) {
+                    $this->outputJson([
+                        'success' => false,
+                        'error' => "Failed: {$message}",
+                        'package_name' => $name,
+                        'package_type' => $type,
+                    ]);
+                }
+
                 return Command::FAILURE;
             }
 
-            $this->comment("✓ {$message} complete");
-        }
+            $stepDuration = microtime(true) - $stepStartTime;
 
-        // Step 5: Install dependencies with progress feedback
-        $this->line('');
-        $installResult = $this->spin(
-            fn (): bool => $this->installDependencies($packageType, $packagePath),
-            'Installing dependencies...'
-        );
-
-        if ($installResult) {
-            $this->comment('✓ Dependencies installed successfully');
-        } else {
-            $this->warning('⚠ Dependency installation had issues (you may need to run composer install manually)');
-        }
-
-        // Step 6: Display success summary
-        $this->line('');
-        $this->outro("🎉 Package '{$name}' created successfully!");
-        $this->line('');
-        $this->comment('Next steps:');
-        $this->line("  1. cd packages/{$name}");
-        $this->line('  2. Start coding in src/');
-        $this->line('  3. Run tests with: composer test');
-
-        return Command::SUCCESS;
-    }
-
-    /**
-     * Run preflight checks to validate environment.
-     */
-    private function runPreflightChecks(): PreflightResult
-    {
-        $preflightChecker = new PreflightChecker($this->process());
-        $preflightResult = $preflightChecker->check();
-
-        // Display check results
-        foreach ($preflightResult->checks as $checkName => $checkResult) {
-            if ($checkResult['passed']) {
-                $this->comment("✓ {$checkName}: {$checkResult['message']}");
-            } else {
-                $this->error("✗ {$checkName}: {$checkResult['message']}");
-
-                if (isset($checkResult['fix'])) {
-                    $this->line('');
-                    $this->note($checkResult['fix'], 'Suggested fix');
-                }
+            if (! $isQuiet && ! $isJson) {
+                $this->comment("✓ {$message} complete");
+            } elseif ($isVerbose && ! $isJson) {
+                $this->comment(sprintf('✓ %s complete (%.2fs)', $message, $stepDuration));
             }
         }
 
-        if ($preflightResult->passed) {
+        // Step 5: Install dependencies with progress feedback
+        if (! $isQuiet && ! $isJson) {
             $this->line('');
-            $this->info('✓ All checks passed');
         }
 
-        return $preflightResult;
+        $installStartTime = microtime(true);
+        if ($isQuiet || $isJson) {
+            $installResult = $this->installDependencies($packageType, $packagePath);
+        } else {
+            $installResult = $this->spin(
+                fn (): bool => $this->installDependencies($packageType, $packagePath),
+                'Installing dependencies...'
+            );
+        }
+        $installDuration = microtime(true) - $installStartTime;
+
+        if ($installResult) {
+            if (! $isQuiet && ! $isJson) {
+                $this->comment('✓ Dependencies installed successfully');
+            } elseif ($isVerbose && ! $isJson) {
+                $this->comment(sprintf('✓ Dependencies installed successfully (%.2fs)', $installDuration));
+            }
+        } elseif (! $isQuiet && ! $isJson) {
+            $this->warning('⚠ Dependency installation had issues (you may need to run composer install manually)');
+        }
+
+        $totalDuration = microtime(true) - $startTime;
+
+        // Step 6: Display success summary
+        $this->displaySuccessMessage(
+            'package',
+            $name,
+            $packagePath,
+            $totalDuration,
+            [
+                "cd packages/{$name}",
+                'Start coding in src/',
+                'Run tests with: composer test',
+            ],
+            $isQuiet,
+            $isJson,
+            $isVerbose
+        );
+
+        return Command::SUCCESS;
     }
 
     /**
@@ -315,14 +356,21 @@ final class CreatePackageCommand extends BaseCommand
      *
      * @return string Validated package name
      */
-    private function getValidatedPackageName(InputInterface $input): string
+    private function getValidatedPackageName(InputInterface $input, bool $isQuiet, bool $isJson): string
     {
         $name = $input->getArgument('name');
 
         // Validate the name format first
-        $validation = $this->validatePackageName($name);
+        $validation = $this->validateName($name);
         if ($validation !== null) {
-            $this->error($validation);
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $validation,
+                ]);
+            } else {
+                $this->error($validation);
+            }
             exit(Command::FAILURE);
         }
 
@@ -330,25 +378,32 @@ final class CreatePackageCommand extends BaseCommand
         $packagePath = "{$root}/packages/{$name}";
 
         // Check if name is available
-        if (! is_dir($packagePath)) {
-            $this->info("✓ Package name '{$name}' is available");
-
+        if (! $this->checkDirectoryExists($name, $packagePath, 'package', $isQuiet, $isJson)) {
             return $name;
         }
 
         // Name is taken, offer suggestions
-        $this->warning("Package '{$name}' already exists");
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
 
-        $nameSuggestionService = new NameSuggestionService();
+        $nameSuggestionService = NameSuggestionService::make();
         $suggestions = $nameSuggestionService->suggest(
             $name,
             'package',
-            fn (?string $suggestedName): bool => $this->validatePackageName($suggestedName) === null && ! is_dir("{$root}/packages/{$suggestedName}")
+            fn (?string $suggestedName): bool => $this->validateName($suggestedName) === null && ! $this->filesystem()->isDirectory("{$root}/packages/{$suggestedName}")
         );
 
         if ($suggestions === []) {
-            $this->error('Could not generate alternative names. Please choose a different name.');
+            $errorMsg = 'Could not generate alternative names. Please choose a different name.';
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
@@ -356,15 +411,17 @@ final class CreatePackageCommand extends BaseCommand
         $bestSuggestion = $nameSuggestionService->getBestSuggestion($suggestions);
 
         // Display suggestions with recommendation
-        $this->comment('Suggested names:');
-        $index = 1;
-        foreach ($suggestions as $suggestion) {
-            $marker = $suggestion === $bestSuggestion ? ' (recommended)' : '';
-            $this->line("  {$index}. {$suggestion}{$marker}");
-            $index++;
-        }
+        if (! $isQuiet && ! $isJson) {
+            $this->comment('Suggested names:');
+            $index = 1;
+            foreach ($suggestions as $suggestion) {
+                $marker = $suggestion === $bestSuggestion ? ' (recommended)' : '';
+                $this->line("  {$index}. {$suggestion}{$marker}");
+                $index++;
+            }
 
-        $this->line('');
+            $this->line('');
+        }
 
         // Let user select or enter custom name with best suggestion pre-filled
         $choice = $this->suggest(
@@ -376,52 +433,39 @@ final class CreatePackageCommand extends BaseCommand
         );
 
         // Validate the chosen name format
-        $validation = $this->validatePackageName($choice);
+        $validation = $this->validateName($choice);
         if ($validation !== null) {
-            $this->error($validation);
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $validation,
+                ]);
+            } else {
+                $this->error($validation);
+            }
             exit(Command::FAILURE);
         }
 
         // Validate the chosen name availability
         $chosenPath = "{$root}/packages/{$choice}";
-        if (is_dir($chosenPath)) {
-            $this->error("Package '{$choice}' also exists. Please try again with a different name.");
+        if ($this->filesystem()->isDirectory($chosenPath)) {
+            $errorMsg = "Package '{$choice}' also exists. Please try again with a different name.";
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
-        $this->info("✓ Package name '{$choice}' is available");
+        if (! $isQuiet && ! $isJson) {
+            $this->info("✓ Package name '{$choice}' is available");
+        }
 
         return $choice;
-    }
-
-    /**
-     * Validate package name.
-     *
-     * Ensures the package name follows conventions:
-     * - Not empty
-     * - Contains only lowercase letters and hyphens
-     * - Starts with a letter
-     * - No consecutive hyphens
-     * - No numbers (since we generate PHP namespaces from names)
-     *
-     * @param  string|null $name The package name to validate
-     * @return string|null Error message if invalid, null if valid
-     */
-    private function validatePackageName(?string $name): ?string
-    {
-        if ($name === null || trim($name) === '') {
-            return 'Package name cannot be empty';
-        }
-
-        if (preg_match('/^[a-z][a-z-]*$/', $name) !== 1) {
-            return 'Package name must start with a letter and contain only lowercase letters and hyphens (no numbers)';
-        }
-
-        if (str_contains($name, '--')) {
-            return 'Package name cannot contain consecutive hyphens';
-        }
-
-        return null;
     }
 
     /**
@@ -433,7 +477,7 @@ final class CreatePackageCommand extends BaseCommand
      */
     private function checkNameAvailability(string $name, string $packagePath): bool
     {
-        if (is_dir($packagePath)) {
+        if ($this->filesystem()->isDirectory($packagePath)) {
             $this->error("Package '{$name}' already exists");
 
             return false;
@@ -469,16 +513,17 @@ final class CreatePackageCommand extends BaseCommand
      * @param  string               $type        Package type
      * @param  string               $packagePath Full package path
      * @param  PackageTypeInterface $packageType Package type instance
+     * @param  bool                 $isVerbose   Show verbose output
      * @return bool                 True on success
      */
-    private function generateConfigFiles(InputInterface $input, string $name, string $type, string $packagePath, PackageTypeInterface $packageType): bool
+    private function generateConfigFiles(InputInterface $input, string $name, string $type, string $packagePath, PackageTypeInterface $packageType, bool $isVerbose): bool
     {
         try {
             // Get stub path for the selected package type
             $stubsBasePath = dirname(__DIR__, 4) . '/stubs';
             $stubPath = $packageType->getStubPath($stubsBasePath);
 
-            if (! is_dir($stubPath)) {
+            if (! $this->filesystem()->isDirectory($stubPath)) {
                 $this->error("Stub directory not found for package type '{$type}' at: {$stubPath}");
 
                 return false;
@@ -488,8 +533,12 @@ final class CreatePackageCommand extends BaseCommand
             $description = $input->getOption('description') ?? "A {$type} package";
             $variables = $packageType->prepareVariables($name, $description);
 
+            if ($isVerbose) {
+                $this->comment('  Processing stub files...');
+            }
+
             // Copy and process all stub files with package type naming rules
-            $this->copyStubFiles($stubPath, $packagePath, $variables, $this->filesystem(), $packageType->getFileNamingRules());
+            $this->copyStubFiles($stubPath, $packagePath, $variables, $this->filesystem(), $packageType->getFileNamingRules(), $isVerbose);
 
             return true;
         } catch (Exception $exception) {
@@ -526,9 +575,13 @@ final class CreatePackageCommand extends BaseCommand
      * @param array<string, string> $variables   Variables for template replacement
      * @param Filesystem            $filesystem  Filesystem service
      * @param array<string, string> $namingRules File naming rules for special files
+     * @param bool                  $isVerbose   Show verbose output
      */
-    private function copyStubFiles(string $stubPath, string $packagePath, array $variables, Filesystem $filesystem, array $namingRules = []): void
+    private function copyStubFiles(string $stubPath, string $packagePath, array $variables, Filesystem $filesystem, array $namingRules = [], bool $isVerbose = false): void
     {
+        // Set base path for Stub facade
+        Stub::setBasePath($stubPath);
+
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($stubPath, RecursiveDirectoryIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
@@ -542,43 +595,56 @@ final class CreatePackageCommand extends BaseCommand
                 $filesystem->makeDirectory($destinationPath, 0755, true);
             } else {
                 // Remove .stub extension if present
-                if (str_ends_with($destinationPath, '.stub')) {
-                    $destinationPath = substr($destinationPath, 0, -5);
+                $targetPath = $relativePath;
+                if (str_ends_with($targetPath, '.stub')) {
+                    $targetPath = substr($targetPath, 0, -5);
                 }
 
                 // Apply naming rules from package type
                 foreach ($namingRules as $pattern => $replacement) {
-                    if (str_ends_with($destinationPath, $pattern)) {
+                    // Normalize paths for comparison (remove leading slashes)
+                    $normalizedPattern = ltrim($pattern, '/');
+                    $normalizedTarget = ltrim($targetPath, '/');
+
+                    if ($normalizedTarget === $normalizedPattern) {
+                        // Convert variable keys to {{UPPERCASE}} format for replacement
+                        $replacementVars = [];
+                        foreach ($variables as $key => $value) {
+                            $replacementVars['{{' . strtoupper($key) . '}}'] = $value;
+                        }
+
                         // Replace pattern with actual values from variables
-                        $replacedPattern = str_replace(array_keys($variables), array_values($variables), $replacement);
-                        $destinationPath = str_replace($pattern, $replacedPattern, $destinationPath);
+                        $replacedPattern = str_replace(array_keys($replacementVars), array_values($replacementVars), $replacement);
+                        // Remove leading slash from replacement for consistency
+                        $targetPath = ltrim($replacedPattern, '/');
 
                         break;
                     }
                 }
 
-                // Read stub content
-                $content = file_get_contents($item->getPathname());
-                if ($content === false) {
-                    continue;
-                }
-
                 // For JSON files, escape backslashes in namespace values
-                $isJsonFile = str_ends_with($destinationPath, '.json');
+                $isJsonFile = str_ends_with($targetPath, '.json');
                 $variablesToUse = $variables;
 
-                if ($isJsonFile && isset($variables[PackageTypeInterface::VAR_NAMESPACE])) {
+                if ($isJsonFile && isset($variables[PackageTypeInterface::NAMESPACE])) {
                     // Escape single backslashes to double backslashes for JSON
                     // But don't double-escape already escaped backslashes
-                    $namespace = $variables[PackageTypeInterface::VAR_NAMESPACE];
-                    $variablesToUse[PackageTypeInterface::VAR_NAMESPACE] = str_replace('\\', '\\\\', $namespace);
+                    $namespace = $variables[PackageTypeInterface::NAMESPACE];
+                    $variablesToUse[PackageTypeInterface::NAMESPACE] = str_replace('\\', '\\\\', $namespace);
                 }
 
-                // Replace variables
-                $content = str_replace(array_keys($variablesToUse), array_values($variablesToUse), $content);
+                if ($isVerbose) {
+                    $this->comment("    Creating: {$targetPath}");
+                }
 
-                // Write processed content
-                $filesystem->write($destinationPath, $content);
+                try {
+                    // Use Stub facade to process and save the file
+                    Stub::create($relativePath, $variablesToUse)->saveTo($packagePath, $targetPath);
+                } catch (StubNotFoundException $e) {
+                    // If stub not found, log error and continue
+                    $this->error("Stub file not found: {$relativePath}");
+                    $this->error($e->getMessage());
+                }
             }
         }
     }

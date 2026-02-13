@@ -8,7 +8,6 @@ use Exception;
 
 use function exec;
 use function is_array;
-use function is_dir;
 use function json_decode;
 use function json_encode;
 
@@ -16,22 +15,14 @@ use const JSON_PRETTY_PRINT;
 use const JSON_UNESCAPED_SLASHES;
 
 use Override;
-use PhpHive\Cli\Console\Commands\BaseCommand;
-use PhpHive\Cli\Support\NameSuggestionService;
-use PhpHive\Cli\Support\PreflightChecker;
-use PhpHive\Cli\Support\PreflightResult;
-
-use function preg_match;
-use function str_contains;
-
+use PhpHive\Cli\Services\NameSuggestionService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
-
-use function trim;
 
 /**
  * Make Workspace Command.
@@ -107,12 +98,12 @@ use function trim;
     description: 'Create a new workspace from template',
     aliases: ['init', 'new'],
 )]
-final class MakeWorkspaceCommand extends BaseCommand
+final class MakeWorkspaceCommand extends BaseMakeCommand
 {
     /**
      * Template repository URL.
      */
-    private const string TEMPLATE_URL = 'https://github.com/pixielity-co/hive-template.git';
+    private const string TEMPLATE_URL = 'https://github.com/pixielity-inc/hive-template.git';
 
     /**
      * Configure the command options and arguments.
@@ -130,6 +121,18 @@ final class MakeWorkspaceCommand extends BaseCommand
                 'name',
                 InputArgument::OPTIONAL,
                 'Workspace name (e.g., my-project)',
+            )
+            ->addOption(
+                'quiet',
+                'q',
+                InputOption::VALUE_NONE,
+                'Minimal output (errors only, no spinners) - for CI/CD',
+            )
+            ->addOption(
+                'json',
+                'j',
+                InputOption::VALUE_NONE,
+                'Output result as JSON - for programmatic usage',
             )
             ->setHelp(
                 <<<'HELP'
@@ -172,85 +175,96 @@ final class MakeWorkspaceCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $_output): int
     {
-        // Display intro banner
-        $this->intro('Create New Workspace');
+        $isQuiet = $input->getOption('quiet') === true;
+        $isJson = $input->getOption('json') === true;
+        $isVerbose = $input->getOption('verbose') === true;
 
+        // Display intro banner (skip in quiet/json mode)
         // Step 1: Run preflight checks
-        $this->info('Running environment checks...');
-        $preflightResult = $this->runPreflightChecks();
+        if (! $isQuiet && ! $isJson) {
+            $this->intro('Create New Workspace');
+            $this->info('Running environment checks...');
+        }
+        $preflightResult = $this->runPreflightChecks($isQuiet, $isJson);
 
         if ($preflightResult->failed()) {
+            $this->displayPreflightErrors($preflightResult, $isQuiet, $isJson);
+
             return Command::FAILURE;
         }
 
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
 
         // Step 2: Get and validate workspace name
-        $name = $this->getValidatedWorkspaceName($input);
+        $name = $this->getValidatedWorkspaceName($input, $isQuiet, $isJson);
 
         // Step 3: Execute workspace creation with progress feedback
         $steps = [
-            'Cloning workspace template' => fn (): int => $this->cloneTemplate($name),
+            'Cloning workspace template' => fn (): int => $this->cloneTemplate($name, $isVerbose),
             'Configuring workspace' => fn (): bool => $this->updateWorkspaceConfig($name),
         ];
 
-        $this->line('');
-        $this->info("Creating workspace: {$name}");
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+            $this->info("Creating workspace: {$name}");
+            $this->line('');
+        }
 
+        $startTime = microtime(true);
         foreach ($steps as $message => $step) {
-            $result = $this->spin($step, "{$message}...");
+            $stepStartTime = microtime(true);
+
+            if ($isQuiet || $isJson) {
+                // No spinner in quiet/json mode
+                $result = $step();
+            } else {
+                $result = $this->spin($step, "{$message}...");
+            }
 
             if ($result !== 0 && $result !== true) {
-                $this->error("Failed: {$message}");
+                if ($isJson) {
+                    $this->outputJson([
+                        'success' => false,
+                        'error' => "Failed: {$message}",
+                        'workspace_name' => $name,
+                    ]);
+                } else {
+                    $this->error("Failed: {$message}");
+                }
 
                 return Command::FAILURE;
             }
 
-            $this->comment("✓ {$message} complete");
-        }
+            $stepDuration = microtime(true) - $stepStartTime;
 
-        // Step 4: Display success summary
-        $this->line('');
-        $this->outro('🎉 Workspace created successfully!');
-        $this->line('');
-        $this->comment('Next steps:');
-        $this->line("  1. cd {$name}");
-        $this->line('  2. pnpm install');
-        $this->line('  3. composer install');
-        $this->line('  4. Start building!');
-
-        return Command::SUCCESS;
-    }
-
-    /**
-     * Run preflight checks to validate environment.
-     */
-    private function runPreflightChecks(): PreflightResult
-    {
-        $preflightChecker = new PreflightChecker($this->process());
-        $preflightResult = $preflightChecker->check();
-
-        // Display check results
-        foreach ($preflightResult->checks as $checkName => $checkResult) {
-            if ($checkResult['passed']) {
-                $this->comment("✓ {$checkName}: {$checkResult['message']}");
-            } else {
-                $this->error("✗ {$checkName}: {$checkResult['message']}");
-
-                if (isset($checkResult['fix'])) {
-                    $this->line('');
-                    $this->note($checkResult['fix'], 'Suggested fix');
-                }
+            if (! $isQuiet && ! $isJson) {
+                $this->comment("✓ {$message} complete");
+            } elseif ($isVerbose && ! $isJson) {
+                $this->comment(sprintf('✓ %s complete (%.2fs)', $message, $stepDuration));
             }
         }
+        $totalDuration = microtime(true) - $startTime;
 
-        if ($preflightResult->passed) {
-            $this->line('');
-            $this->info('✓ All checks passed');
-        }
+        // Step 4: Display success summary
+        $this->displaySuccessMessage(
+            'workspace',
+            $name,
+            getcwd() . "/{$name}",
+            $totalDuration,
+            [
+                "cd {$name}",
+                'pnpm install',
+                'composer install',
+                'Start building!',
+            ],
+            $isQuiet,
+            $isJson,
+            $isVerbose
+        );
 
-        return $preflightResult;
+        return Command::SUCCESS;
     }
 
     /**
@@ -258,14 +272,22 @@ final class MakeWorkspaceCommand extends BaseCommand
      *
      * @return string Validated workspace name
      */
-    private function getValidatedWorkspaceName(InputInterface $input): string
+    private function getValidatedWorkspaceName(InputInterface $input, bool $isQuiet, bool $isJson): string
     {
         // Get workspace name from argument or prompt
         $name = $this->argument('name');
 
         if (($name === null || $name === '') && ! $input->isInteractive()) {
             // Non-interactive mode without name - error
-            $this->error('Workspace name is required in non-interactive mode');
+            $errorMsg = 'Workspace name is required in non-interactive mode';
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
@@ -275,38 +297,52 @@ final class MakeWorkspaceCommand extends BaseCommand
                 label: 'What is the workspace name?',
                 placeholder: 'my-project',
                 required: true,
-                validate: $this->validateWorkspaceName(...),
+                validate: $this->validateName(...),
             );
         }
 
         // Validate workspace name
-        $validation = $this->validateWorkspaceName($name);
+        $validation = $this->validateName($name);
 
         if ($validation !== null) {
-            $this->error($validation);
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $validation,
+                ]);
+            } else {
+                $this->error($validation);
+            }
             exit(Command::FAILURE);
         }
 
         // Check if directory already exists
-        if (! is_dir($name)) {
-            $this->info("✓ Workspace name '{$name}' is available");
-
+        if (! $this->checkDirectoryExists($name, $name, 'workspace', $isQuiet, $isJson)) {
             return $name;
         }
 
         // Name is taken, offer suggestions
-        $this->warning("Directory '{$name}' already exists");
-        $this->line('');
+        if (! $isQuiet && ! $isJson) {
+            $this->line('');
+        }
 
-        $nameSuggestionService = new NameSuggestionService();
+        $nameSuggestionService = NameSuggestionService::make();
         $suggestions = $nameSuggestionService->suggest(
             $name,
             'workspace',
-            fn ($suggestedName): bool => ! is_dir($suggestedName)
+            fn (string $suggestedName): bool => ! $this->filesystem()->isDirectory($suggestedName)
         );
 
         if ($suggestions === []) {
-            $this->error('Could not generate alternative names. Please choose a different name.');
+            $errorMsg = 'Could not generate alternative names. Please choose a different name.';
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
@@ -314,15 +350,17 @@ final class MakeWorkspaceCommand extends BaseCommand
         $bestSuggestion = $nameSuggestionService->getBestSuggestion($suggestions);
 
         // Display suggestions with recommendation
-        $this->comment('Suggested names:');
-        $index = 1;
-        foreach ($suggestions as $suggestion) {
-            $marker = $suggestion === $bestSuggestion ? ' (recommended)' : '';
-            $this->line("  {$index}. {$suggestion}{$marker}");
-            $index++;
-        }
+        if (! $isQuiet && ! $isJson) {
+            $this->comment('Suggested names:');
+            $index = 1;
+            foreach ($suggestions as $suggestion) {
+                $marker = $suggestion === $bestSuggestion ? ' (recommended)' : '';
+                $this->line("  {$index}. {$suggestion}{$marker}");
+                $index++;
+            }
 
-        $this->line('');
+            $this->line('');
+        }
 
         // Let user select or enter custom name with best suggestion pre-filled
         $choice = $this->suggest(
@@ -334,44 +372,24 @@ final class MakeWorkspaceCommand extends BaseCommand
         );
 
         // Validate the chosen name
-        if (is_dir($choice)) {
-            $this->error("Directory '{$choice}' also exists. Please try again with a different name.");
+        if ($this->filesystem()->isDirectory($choice)) {
+            $errorMsg = "Directory '{$choice}' also exists. Please try again with a different name.";
+            if ($isJson) {
+                $this->outputJson([
+                    'success' => false,
+                    'error' => $errorMsg,
+                ]);
+            } else {
+                $this->error($errorMsg);
+            }
             exit(Command::FAILURE);
         }
 
-        $this->info("✓ Workspace name '{$choice}' is available");
+        if (! $isQuiet && ! $isJson) {
+            $this->info("✓ Workspace name '{$choice}' is available");
+        }
 
         return $choice;
-    }
-
-    /**
-     * Validate workspace name.
-     *
-     * Ensures the workspace name follows conventions:
-     * - Not empty
-     * - Contains only lowercase letters and hyphens
-     * - Starts with a letter
-     * - No consecutive hyphens
-     * - No numbers (since we generate PHP namespaces from names)
-     *
-     * @param  string|null $name The workspace name to validate
-     * @return string|null Error message if invalid, null if valid
-     */
-    private function validateWorkspaceName(?string $name): ?string
-    {
-        if ($name === null || trim($name) === '') {
-            return 'Workspace name cannot be empty';
-        }
-
-        if (preg_match('/^[a-z][a-z-]*$/', $name) !== 1) {
-            return 'Workspace name must start with a letter and contain only lowercase letters and hyphens (no numbers)';
-        }
-
-        if (str_contains($name, '--')) {
-            return 'Workspace name cannot contain consecutive hyphens';
-        }
-
-        return null;
     }
 
     /**
@@ -380,24 +398,43 @@ final class MakeWorkspaceCommand extends BaseCommand
      * Clones the official PhpHive template repository and removes the .git
      * directory to allow for a fresh git initialization.
      *
-     * @param  string $name Workspace name (directory to clone into)
+     * @param  string $name      Workspace name (directory to clone into)
+     * @param  bool   $isVerbose Show verbose output
      * @return int    Exit code (0 for success, non-zero for failure)
      */
-    private function cloneTemplate(string $name): int
+    private function cloneTemplate(string $name, bool $isVerbose): int
     {
         // Clone the template repository
+        $cloneCommand = 'git clone ' . self::TEMPLATE_URL . " {$name}";
+
+        if ($isVerbose) {
+            $this->comment("  Executing: {$cloneCommand}");
+        }
+
         $process = Process::fromShellCommandline(
-            'git clone ' . self::TEMPLATE_URL . " {$name}",
+            $cloneCommand,
             null,
             null,
             null,
             300 // 5 minute timeout
         );
-        $process->run();
+
+        if ($isVerbose) {
+            // Show output in verbose mode
+            $process->run(function ($type, $buffer): void {
+                echo $buffer;
+            });
+        } else {
+            $process->run();
+        }
 
         // Remove .git directory to start fresh
         if ($process->isSuccessful()) {
-            $process = Process::fromShellCommandline("rm -rf {$name}/.git");
+            $rmCommand = "rm -rf {$name}/.git";
+            if ($isVerbose) {
+                $this->comment("  Executing: {$rmCommand}");
+            }
+            $process = Process::fromShellCommandline($rmCommand);
             $process->run();
         }
 
