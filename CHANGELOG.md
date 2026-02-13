@@ -5,6 +5,34 @@ All notable changes to PhpHive CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.21] - 2026-02-14
+
+### Added
+
+- **Comprehensive Unit Test Suite**: Added 746+ test methods across 43 test files
+  - Complete test coverage for all Console Commands (31 test files)
+  - Tests for Factories, Services, Support classes, and PackageTypes
+  - All tests include comprehensive docblocks and inline comments
+  - Created TestMakeCommand fixture for BaseMakeCommand testing
+  - All tests passing with zero PHPStan warnings
+
+### Changed
+
+- **String Function Modernization**: Replaced native PHP string functions with Laravel's Str helper
+  - Replaced `str_contains()`, `str_starts_with()`, `str_ends_with()` with `Str::contains()`, `Str::startsWith()`, `Str::endsWith()`
+  - Replaced `str_replace()`, `substr()`, `strlen()` with `Str::replace()`, `Str::substr()`, `Str::length()`
+  - Replaced `trim()`, `ltrim()`, `rtrim()` with `Str::trim()`, `Str::ltrim()`, `Str::rtrim()`
+  - Replaced `strtoupper()`, `strtolower()`, `ucfirst()`, `ucwords()` with `Str::upper()`, `Str::lower()`, `Str::ucfirst()`, `Str::ucwords()`
+  - Applied across AppTypes, PackageTypes, Concerns, Services, and Support classes
+  - Improved code consistency and Laravel ecosystem alignment
+
+### Fixed
+
+- **Package Name Case Conversion**: Fixed `convertToNamespace()` to properly capitalize each word
+  - Changed from `Str::ucfirst(Str::lower(...))` to `Str::ucwords(...)`
+  - Ensures correct PascalCase conversion (TestPackage instead of Testpackage)
+  - All package type tests now passing
+
 ## [1.0.20] - 2026-02-13
 
 ### Added
