@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Console\Commands\Framework;
 
-use function array_column;
 use function implode;
 
 use Override;
@@ -222,7 +221,7 @@ final class ConsoleCommand extends BaseCommand
             // No workspace specified - prompt user to select one
             $workspaces = $this->getWorkspaces();
 
-            if ($workspaces === []) {
+            if ($workspaces->isEmpty()) {
                 // No workspaces found in monorepo
                 $this->error('No workspaces found');
 
@@ -233,7 +232,7 @@ final class ConsoleCommand extends BaseCommand
             // Displays a list of all available workspaces
             $workspace = $this->select(
                 'Select workspace',
-                array_column($workspaces, 'name'),
+                $workspaces->pluck('name')->all(),
             );
 
             // Ensure workspace is a string after selection

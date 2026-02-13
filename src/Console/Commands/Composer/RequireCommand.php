@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Console\Commands\Composer;
 
-use function array_column;
-
 use Override;
 use PhpHive\Cli\Console\Commands\BaseCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -74,14 +72,29 @@ final class RequireCommand extends BaseCommand
      * Configure the command options and arguments.
      *
      * Defines all command-line options that users can pass to customize
-     * the package installation behavior. The package argument is required,
-     * while the dev option is command-specific. Common options like --workspace
-     * are inherited from BaseCommand.
+     * the package installation behavior. This method sets up the command
+     * signature with required package argument and optional flags.
+     *
+     * Configuration details:
+     * - Inherits --workspace (-w) option from BaseCommand
+     * - Requires package argument (vendor/package format)
+     * - Adds --dev (-d) flag for development dependencies
+     * - Provides comprehensive help text with examples
+     *
+     * Package argument format:
+     * - Simple: "symfony/console" (latest version)
+     * - With version: "symfony/console:^7.0" (specific constraint)
+     * - With operator: "guzzlehttp/guzzle:>=7.0" (minimum version)
+     *
+     * The --dev flag determines the dependency type:
+     * - Without --dev: Added to "require" section (production)
+     * - With --dev: Added to "require-dev" section (development only)
      */
     #[Override]
     protected function configure(): void
     {
-        parent::configure(); // Inherit common options from BaseCommand
+        // Inherit common options from BaseCommand (--workspace, etc.)
+        parent::configure();
 
         $this
             ->addArgument(
@@ -112,54 +125,103 @@ final class RequireCommand extends BaseCommand
     /**
      * Execute the require command.
      *
-     * This method orchestrates the package installation process:
-     * 1. Extracts package name and options from user input
-     * 2. Selects target workspace (interactive if not specified)
-     * 3. Validates workspace exists
-     * 4. Displays installation details
-     * 5. Runs composer require in workspace directory
-     * 6. Reports installation results
+     * This method orchestrates the package installation process by handling
+     * workspace selection, dependency type determination, and Composer execution.
+     * It ensures packages are added to the correct workspace with proper
+     * dependency classification (production vs development).
+     *
+     * Execution flow:
+     * 1. Display intro banner to user
+     * 2. Extract package name from arguments
+     * 3. Determine dependency type (production or development)
+     * 4. Determine target workspace (from option or interactive selection)
+     * 5. Validate workspace exists in monorepo
+     * 6. Display installation details (package, workspace, type)
+     * 7. Execute composer require in workspace directory
+     * 8. Report success or failure to user
+     *
+     * Workspace selection logic:
+     * - If --workspace option provided: Use specified workspace
+     * - If no option: Prompt interactive selection from available workspaces
+     * - If no workspaces found: Exit with error
+     * - If workspace doesn't exist: Exit with error
+     *
+     * Dependency type determination:
+     * - Without --dev flag: Production dependency (added to "require")
+     * - With --dev flag: Development dependency (added to "require-dev")
      *
      * The command uses the composerRequire() method from InteractsWithComposer
-     * trait which handles the actual Composer execution with proper error handling
-     * and output streaming.
+     * trait which handles:
+     * - Working directory management (cd to workspace)
+     * - Composer require execution with appropriate flags
+     * - composer.json automatic updates
+     * - Package download and installation
+     * - composer.lock updates
+     * - Dependency conflict resolution
+     * - Real-time output streaming
+     * - Exit code propagation
      *
-     * @param  InputInterface  $input  Command input (arguments and options)
-     * @param  OutputInterface $output Command output (for displaying messages)
-     * @return int             Exit code (0 for success, 1 for failure)
+     * Common failure scenarios:
+     * - Package not found on Packagist
+     * - Version constraint conflicts with existing dependencies
+     * - Network connectivity issues
+     * - Invalid package name format
+     * - Insufficient permissions
+     *
+     * @param  InputInterface  $input  Command input containing arguments and options
+     * @param  OutputInterface $output Command output for displaying messages (unused but required by interface)
+     * @return int             Exit code from Composer (0 for success, non-zero for failure)
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // Display intro banner
+        // =====================================================================
+        // DISPLAY INTRO
+        // =====================================================================
         $this->intro('Adding Composer package...');
 
+        // =====================================================================
+        // EXTRACT PACKAGE AND OPTIONS
+        // =====================================================================
         // Extract package name from arguments
+        // Format: vendor/package or vendor/package:version
+        // Examples: "symfony/console", "guzzlehttp/guzzle:^7.0"
         $package = $input->getArgument('package');
 
         // Check if this is a dev dependency
+        // The --dev flag determines whether the package is added to
+        // "require" (production) or "require-dev" (development only)
         $isDev = $input->getOption('dev');
 
-        // Get or select workspace
+        // =====================================================================
+        // WORKSPACE SELECTION
+        // =====================================================================
+        // Get workspace from --workspace option (may be null or empty)
         $workspace = $input->getOption('workspace');
 
         if (! is_string($workspace) || $workspace === '') {
-            // No workspace specified - prompt user to select one
+            // No workspace specified - prompt user to select one interactively
+            // This uses the getWorkspaces() method from InteractsWithMonorepo trait
+            // which discovers all workspaces defined in pnpm-workspace.yaml
             $workspaces = $this->getWorkspaces();
 
-            if ($workspaces === []) {
-                // No workspaces found in monorepo
+            if ($workspaces->isEmpty()) {
+                // No workspaces found in monorepo - cannot proceed
                 $this->error('No workspaces found');
 
                 return Command::FAILURE;
             }
 
-            // Interactive workspace selection
+            // Interactive workspace selection using Laravel Prompts
+            // pluck('name') extracts just the workspace names from the collection
+            // This creates an array like: ['api', 'web', 'calculator']
+            // all() converts the collection to a plain array for the select prompt
             $workspace = $this->select(
                 'Select workspace',
-                array_column($workspaces, 'name'),
+                $workspaces->pluck('name')->all(),
             );
 
             // Ensure workspace is a string after selection
+            // The select() method should return a string, but we validate for safety
             if (! is_string($workspace)) {
                 $this->error('Invalid workspace selection');
 
@@ -167,32 +229,57 @@ final class RequireCommand extends BaseCommand
             }
         }
 
-        // Verify workspace exists
+        // =====================================================================
+        // WORKSPACE VALIDATION
+        // =====================================================================
+        // Verify the workspace exists in the monorepo
+        // This prevents attempting to install packages in non-existent directories
         if (! $this->hasWorkspace($workspace)) {
             $this->error("Workspace '{$workspace}' not found");
 
             return Command::FAILURE;
         }
 
-        // Display installation details
+        // =====================================================================
+        // DISPLAY INSTALLATION DETAILS
+        // =====================================================================
         $this->info("Adding package: {$package}");
         $this->comment("Workspace: {$workspace}");
+
+        // Display dependency type based on --dev flag
+        // in_array() with strict comparison checks for truthy values
+        // This handles both boolean true and string/int representations
         $this->comment('Type: ' . ((in_array($isDev, [true, '1', 1], true)) ? 'development' : 'production'));
         $this->line('');
 
+        // =====================================================================
+        // EXECUTE COMPOSER REQUIRE
+        // =====================================================================
         // Run composer require in workspace directory
-        // This will update composer.json and install the package
+        // The composerRequire() method from InteractsWithComposer trait:
+        // 1. Changes to the workspace directory
+        // 2. Executes: composer require {package} [--dev]
+        // 3. Updates composer.json with new dependency
+        // 4. Downloads and installs the package
+        // 5. Updates composer.lock with resolved versions
+        // 6. Streams output in real-time
+        // 7. Returns the exit code from Composer
         $exitCode = $this->composerRequire($workspace, $package, $isDev);
 
-        // Report results to user
+        // =====================================================================
+        // REPORT RESULTS
+        // =====================================================================
         if ($exitCode === 0) {
-            // Success - package installed
+            // Success - package installed and composer.json updated
             $this->outro("✓ Package '{$package}' added successfully");
         } else {
-            // Failure - installation failed
+            // Failure - installation failed (see Composer output for details)
+            // Common causes: package not found, version conflicts, network issues
             $this->error("✗ Failed to add package '{$package}'");
         }
 
+        // Return the exit code from Composer
+        // This allows shell scripts to detect success/failure
         return $exitCode;
     }
 }
