@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
-use function array_filter;
 use function dirname;
-use function file_exists;
-use function file_get_contents;
 
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 
-use function is_dir;
 use function json_decode;
 
 use PhpHive\Cli\Contracts\AppTypeInterface;
+use PhpHive\Cli\Support\Filesystem;
 
 use function preg_match_all;
 
@@ -61,14 +59,29 @@ use Symfony\Component\Finder\Finder;
 trait InteractsWithMonorepo
 {
     /**
+     * Get the Filesystem service instance.
+     *
+     * This method provides access to the Filesystem service for file operations.
+     * It should be implemented by the class using this trait to return the
+     * appropriate Filesystem instance from the dependency injection container.
+     *
+     * @return Filesystem The Filesystem service instance
+     */
+    abstract protected function filesystem(): Filesystem;
+
+    /**
      * Get the absolute path to the monorepo root directory.
      *
      * The monorepo root is identified by the presence of both turbo.json
      * and pnpm-workspace.yaml files. This method searches upward from the
      * current working directory until it finds these marker files.
      *
-     * The result is cached statically to avoid repeated filesystem traversal.
+     * This works correctly regardless of where the binary is installed:
+     * - Global installation: Searches from user's current directory
+     * - Local bin/: Searches from user's current directory
+     * - Subdirectory: Traverses upward to find root
      *
+     * The result is cached statically to avoid repeated filesystem traversal.
      *
      * @return string Absolute path to monorepo root
      *
@@ -83,7 +96,7 @@ trait InteractsWithMonorepo
             return $root;
         }
 
-        // Start from current working directory
+        // Start from current working directory (where command was executed, not where binary is)
         $current = getcwd();
 
         if ($current === false) {
@@ -91,16 +104,28 @@ trait InteractsWithMonorepo
         }
 
         // Traverse upward until we find monorepo markers or reach filesystem root
-        while ($current !== '/') {
+        $maxDepth = 20; // Prevent infinite loops
+        $depth = 0;
+
+        while ($depth < $maxDepth) {
             // Check for both turbo.json and pnpm-workspace.yaml
-            if (file_exists($current . '/turbo.json') && file_exists($current . '/pnpm-workspace.yaml')) {
+            if ($this->filesystem()->exists($current . '/turbo.json') &&
+                $this->filesystem()->exists($current . '/pnpm-workspace.yaml')) {
                 $root = $current;
 
                 return $root;
             }
 
-            // Move up one directory
-            $current = dirname($current);
+            // Get parent directory
+            $parent = dirname($current);
+
+            // If we've reached the filesystem root, stop
+            if (in_array($parent, [$current, '/', '.'], true)) {
+                break;
+            }
+
+            $current = $parent;
+            $depth++;
         }
 
         throw new RuntimeException('Could not find monorepo root (turbo.json and pnpm-workspace.yaml not found)');
@@ -122,21 +147,21 @@ trait InteractsWithMonorepo
      * - hasComposer: Whether composer.json exists
      * - hasPackageJson: Whether package.json exists
      *
-     * @return array<array{name: string, path: string, type: string, packageName: string, hasComposer: bool, hasPackageJson: bool}>
+     * @return Collection<int, array{name: string, path: string, type: string, packageName: string, hasComposer: bool, hasPackageJson: bool}>
      */
-    protected function getWorkspaces(): array
+    protected function getWorkspaces(): Collection
     {
         $root = $this->getMonorepoRoot();
         $workspaceFile = $root . '/pnpm-workspace.yaml';
 
-        if (! file_exists($workspaceFile)) {
-            return [];
+        if (! $this->filesystem()->exists($workspaceFile)) {
+            return collect([]);
         }
 
         // Parse workspace patterns from YAML file
-        $content = file_get_contents($workspaceFile);
-        if ($content === false) {
-            return [];
+        $content = $this->filesystem()->read($workspaceFile);
+        if ($content === null) {
+            return collect([]);
         }
         preg_match_all('/- "([^"]+)"/', $content, $matches);
 
@@ -149,12 +174,12 @@ trait InteractsWithMonorepo
             $pattern = str_replace('/*', '', $pattern);
             $dir = $root . '/' . $pattern;
 
-            if (! is_dir($dir)) {
+            if (! $this->filesystem()->isDirectory($dir)) {
                 continue;
             }
 
             // Find all subdirectories at depth 0
-            $finder = new Finder();
+            $finder = AppTypeInterface::make(Finder::class);
             $finder->directories()->in($dir)->depth(0);
 
             foreach ($finder as $directory) {
@@ -167,10 +192,10 @@ trait InteractsWithMonorepo
                 }
 
                 // Only include directories with package.json
-                if (file_exists($path . '/package.json')) {
+                if ($this->filesystem()->exists($path . '/package.json')) {
                     // Parse package.json for metadata
-                    $packageJsonContent = file_get_contents($path . '/package.json');
-                    if ($packageJsonContent === false) {
+                    $packageJsonContent = $this->filesystem()->read($path . '/package.json');
+                    if ($packageJsonContent === null) {
                         continue;
                     }
                     $packageJson = json_decode($packageJsonContent, true);
@@ -184,14 +209,14 @@ trait InteractsWithMonorepo
                         // Determine type based on path (apps/ vs packages/)
                         'type' => str_contains($path, '/apps/') ? AppTypeInterface::WORKSPACE_TYPE_APP : AppTypeInterface::WORKSPACE_TYPE_PACKAGE,
                         'packageName' => $packageJson['name'] ?? $name,
-                        'hasComposer' => file_exists($path . '/composer.json'),
+                        'hasComposer' => $this->filesystem()->exists($path . '/composer.json'),
                         'hasPackageJson' => true,
                     ];
                 }
             }
         }
 
-        return $workspaces;
+        return collect($workspaces);
     }
 
     /**
@@ -206,16 +231,8 @@ trait InteractsWithMonorepo
      */
     protected function getWorkspace(string $name): ?array
     {
-        $workspaces = $this->getWorkspaces();
-
-        foreach ($workspaces as $workspace) {
-            // Match by directory name or package name
-            if ($workspace['name'] === $name || $workspace['packageName'] === $name) {
-                return $workspace;
-            }
-        }
-
-        return null;
+        return $this->getWorkspaces()
+            ->first(fn (array $workspace): bool => $workspace['name'] === $name || $workspace['packageName'] === $name);
     }
 
     /**
@@ -246,11 +263,13 @@ trait InteractsWithMonorepo
      * Filters workspaces to return only those categorized as 'app'.
      * Applications are typically deployable services or frontends.
      *
-     * @return array<array> Array of app workspace metadata
+     * @return Collection<int, array> Collection of app workspace metadata
      */
-    protected function getApps(): array
+    protected function getApps(): Collection
     {
-        return array_filter($this->getWorkspaces(), fn (array $w): bool => $w['type'] === AppTypeInterface::WORKSPACE_TYPE_APP);
+        return $this->getWorkspaces()
+            ->filter(fn (array $w): bool => $w['type'] === AppTypeInterface::WORKSPACE_TYPE_APP)
+            ->values();
     }
 
     /**
@@ -259,11 +278,13 @@ trait InteractsWithMonorepo
      * Filters workspaces to return only those categorized as 'package'.
      * Packages are typically shared libraries or utilities.
      *
-     * @return array<array> Array of package workspace metadata
+     * @return Collection<int, array> Collection of package workspace metadata
      */
-    protected function getPackages(): array
+    protected function getPackages(): Collection
     {
-        return array_filter($this->getWorkspaces(), fn (array $w): bool => $w['type'] === AppTypeInterface::WORKSPACE_TYPE_PACKAGE);
+        return $this->getWorkspaces()
+            ->filter(fn (array $w): bool => $w['type'] === AppTypeInterface::WORKSPACE_TYPE_PACKAGE)
+            ->values();
     }
 
     /**
@@ -297,8 +318,8 @@ trait InteractsWithMonorepo
 
         $composerJson = $workspace['path'] . '/composer.json';
 
-        $content = file_get_contents($composerJson);
-        if ($content === false) {
+        $content = $this->filesystem()->read($composerJson);
+        if ($content === null) {
             return null;
         }
         $data = json_decode($content, true);
@@ -328,8 +349,8 @@ trait InteractsWithMonorepo
 
         $packageJson = $workspace['path'] . '/package.json';
 
-        $content = file_get_contents($packageJson);
-        if ($content === false) {
+        $content = $this->filesystem()->read($packageJson);
+        if ($content === null) {
             return null;
         }
         $data = json_decode($content, true);
@@ -357,12 +378,9 @@ trait InteractsWithMonorepo
      */
     protected function getAllWorkspaceNames(): array
     {
-        $workspaces = $this->getWorkspaces();
-
-        return array_map(
-            static fn (array $workspace): string => $workspace['name'],
-            $workspaces
-        );
+        return $this->getWorkspaces()
+            ->pluck('name')
+            ->all();
     }
 
     /**
@@ -399,7 +417,7 @@ trait InteractsWithMonorepo
         $workspaces = $this->getAllWorkspaceNames();
 
         // If no workspaces available, throw an exception
-        if ($workspaces === []) {
+        if (count($workspaces) === 0) {
             throw new RuntimeException('No workspaces found in the monorepo.');
         }
 
@@ -462,7 +480,7 @@ trait InteractsWithMonorepo
         $allWorkspaces = $this->getAllWorkspaceNames();
 
         // If no workspaces available, throw an exception
-        if ($allWorkspaces === []) {
+        if (count($allWorkspaces) === 0) {
             throw new RuntimeException('No workspaces found in the monorepo.');
         }
 

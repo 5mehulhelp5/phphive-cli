@@ -16,7 +16,6 @@ use PhpHive\Cli\Support\Process;
 use function preg_match;
 
 use RuntimeException;
-use Symfony\Component\Process\Process as SymfonyProcess;
 
 use function trim;
 
@@ -84,7 +83,7 @@ trait InteractsWithComposer
         );
 
         // Enable TTY mode for interactive output (colors, progress bars)
-        $process->setTty(SymfonyProcess::isTtySupported());
+        $process->setTty(Process::isTtySupported());
 
         // Run process and stream output in real-time
         return $process->run(function ($type, $buffer): void {

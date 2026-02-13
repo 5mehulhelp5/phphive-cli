@@ -6,6 +6,7 @@ namespace PhpHive\Cli\Concerns;
 
 use Closure;
 
+use function is_array;
 use function Laravel\Prompts\clear;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\error;
@@ -28,6 +29,10 @@ use function Laravel\Prompts\table;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\textarea;
 use function Laravel\Prompts\warning;
+
+use ReflectionException;
+use ReflectionObject;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Laravel Prompts Integration Trait.
@@ -76,6 +81,31 @@ use function Laravel\Prompts\warning;
  */
 trait InteractsWithPrompts
 {
+    /**
+     * Static output interface for prompt methods.
+     */
+    private static ?OutputInterface $staticOutput = null;
+
+    /**
+     * Set the output interface for prompt methods.
+     *
+     * @param OutputInterface $output The output interface
+     */
+    public static function setOutput(OutputInterface $output): void
+    {
+        self::$staticOutput = $output;
+    }
+
+    /**
+     * Get the output interface for prompt methods.
+     *
+     * @return OutputInterface|null The output interface or null if not set
+     */
+    protected static function getOutput(): ?OutputInterface
+    {
+        return self::$staticOutput;
+    }
+
     /**
      * Clear the terminal screen.
      *
@@ -154,6 +184,82 @@ trait InteractsWithPrompts
     protected function error(string $message): void
     {
         error($message);
+    }
+
+    /**
+     * Display a blank line.
+     *
+     * Outputs an empty line to the console for spacing and readability.
+     * Commonly used to separate sections of output.
+     *
+     * @param string $message Optional message to display (defaults to empty string)
+     */
+    protected function line(string $message = ''): void
+    {
+        $output = self::getOutput();
+
+        // Try to get output from instance property if static output is not set
+        if (! $output instanceof OutputInterface) {
+            // Use reflection to safely check for output property
+            try {
+                $reflectionObject = new ReflectionObject($this);
+                if ($reflectionObject->hasProperty('output')) {
+                    $property = $reflectionObject->getProperty('output');
+                    $value = $property->getValue($this);
+                    if ($value instanceof OutputInterface) {
+                        $output = $value;
+                    }
+                }
+            } catch (ReflectionException) {
+                // Property doesn't exist or can't be accessed, continue without output
+            }
+        }
+
+        if (! $output instanceof OutputInterface) {
+            return;
+        }
+
+        if ($message === '') {
+            $output->writeln('');
+        } else {
+            $output->writeln($message);
+        }
+    }
+
+    /**
+     * Display a comment message.
+     *
+     * Comment messages are displayed in a muted style (typically gray/dim)
+     * and are used for supplementary information or section headers.
+     *
+     * @param string $message The comment message to display
+     */
+    protected function comment(string $message): void
+    {
+        $output = self::getOutput();
+
+        // Try to get output from instance property if static output is not set
+        if (! $output instanceof OutputInterface) {
+            // Use reflection to safely check for output property
+            try {
+                $reflectionObject = new ReflectionObject($this);
+                if ($reflectionObject->hasProperty('output')) {
+                    $property = $reflectionObject->getProperty('output');
+                    $value = $property->getValue($this);
+                    if ($value instanceof OutputInterface) {
+                        $output = $value;
+                    }
+                }
+            } catch (ReflectionException) {
+                // Property doesn't exist or can't be accessed, continue without output
+            }
+        }
+
+        if (! $output instanceof OutputInterface) {
+            return;
+        }
+
+        $output->writeln("<comment>{$message}</comment>");
     }
 
     /**

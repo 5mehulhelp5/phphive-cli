@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PhpHive\Cli\Concerns;
 
 use function error_log;
-use function is_dir;
 use function is_subclass_of;
 
 use PhpHive\Cli\Support\Filesystem;
@@ -81,7 +80,7 @@ trait HasDiscovery
     protected function discoverCommands(string $path, string $namespace): void
     {
         // Skip if directory doesn't exist
-        if (! is_dir($path)) {
+        if (! $this->filesystem()->isDirectory($path)) {
             return;
         }
 

@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace PhpHive\Cli\Concerns;
 
-use function file_exists;
-use function file_get_contents;
-use function file_put_contents;
 use function getenv;
 use function is_array;
-use function is_dir;
 use function json_decode;
 use function json_encode;
 use function ltrim;
 use function mb_strlen;
-use function mkdir;
+
+use PhpHive\Cli\Support\Filesystem;
+
 use function preg_replace;
 use function str_contains;
 use function str_repeat;
@@ -48,6 +46,11 @@ use function version_compare;
  */
 trait ChecksForUpdates
 {
+    /**
+     * Get the Filesystem service instance.
+     */
+    abstract protected function filesystem(): Filesystem;
+
     /**
      * Check for available updates and display notification if found.
      *
@@ -106,8 +109,8 @@ trait ChecksForUpdates
         $cacheDir = $cacheHome . '/phphive';
 
         // Create directory if it doesn't exist
-        if (! is_dir($cacheDir)) {
-            mkdir($cacheDir, 0755, true);
+        if (! $this->filesystem()->isDirectory($cacheDir)) {
+            $this->filesystem()->makeDirectory($cacheDir, 0755, true);
         }
 
         return $cacheDir;
@@ -126,13 +129,13 @@ trait ChecksForUpdates
     private function shouldCheckForUpdates(string $cacheFile): bool
     {
         // No cache file, perform check
-        if (! file_exists($cacheFile)) {
+        if (! $this->filesystem()->exists($cacheFile)) {
             return true;
         }
 
         // Read cache file
-        $content = file_get_contents($cacheFile);
-        if ($content === false) {
+        $content = $this->filesystem()->read($cacheFile);
+        if ($content === null) {
             return true;
         }
 
@@ -158,12 +161,12 @@ trait ChecksForUpdates
      */
     private function displayCachedUpdateNotification(string $cacheFile, string $currentVersion): void
     {
-        if (! file_exists($cacheFile)) {
+        if (! $this->filesystem()->exists($cacheFile)) {
             return;
         }
 
-        $content = file_get_contents($cacheFile);
-        if ($content === false) {
+        $content = $this->filesystem()->read($cacheFile);
+        if ($content === null) {
             return;
         }
 
@@ -253,7 +256,7 @@ trait ChecksForUpdates
             'latestVersion' => $latestVersion,
         ];
 
-        file_put_contents($cacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+        $this->filesystem()->write($cacheFile, json_encode($cache, JSON_PRETTY_PRINT));
     }
 
     /**

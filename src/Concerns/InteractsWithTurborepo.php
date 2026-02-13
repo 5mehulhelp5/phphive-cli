@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PhpHive\Cli\Concerns;
 
 use function array_keys;
-use function file_exists;
-use function file_get_contents;
 use function implode;
 use function json_decode;
 
@@ -224,13 +222,13 @@ trait InteractsWithTurborepo
         // Locate turbo.json in monorepo root
         $turboJson = $this->getMonorepoRoot() . '/turbo.json';
 
-        if (! file_exists($turboJson)) {
+        if (! $this->filesystem()->exists($turboJson)) {
             return [];
         }
 
         // Parse JSON configuration
-        $content = file_get_contents($turboJson);
-        if ($content === false) {
+        $content = $this->filesystem()->read($turboJson);
+        if ($content === null) {
             return [];
         }
         $config = json_decode($content, true);
